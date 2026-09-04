@@ -11,6 +11,17 @@ FIGURES = ROOT / "figures"
 RESULTS.mkdir(exist_ok=True)
 FIGURES.mkdir(exist_ok=True)
 
+
+def result_path(name: str) -> pathlib.Path:
+    """Return a result path, preferring the plain file for compatibility.
+
+    Large per-episode tables are distributed as ``.csv.gz`` in the public
+    release, while older local runs may still contain the uncompressed CSV.
+    """
+    plain = RESULTS / name
+    compressed = RESULTS / f"{name}.gz"
+    return plain if plain.exists() else compressed
+
 # ---------------------------------------------------------------- reproducibility
 MASTER_SEED = 20240620  # publication date of Rigoux et al. (2024)
 

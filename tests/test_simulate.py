@@ -1,9 +1,12 @@
 """Generative simulation, policies, and end-to-end reproducibility."""
 
+import gzip
+from pathlib import Path
+
 import numpy as np
 import pytest
 
-from epistemic_trap.config import PRIORS
+from epistemic_trap.config import PRIORS, result_path
 from epistemic_trap.grid import ParameterGrid
 from epistemic_trap.policies import (FixedKPolicy, GreedyPolicy, RandomizedPolicy,
                                      ResponsibilityFeedbackPolicy,
@@ -11,6 +14,13 @@ from epistemic_trap.policies import (FixedKPolicy, GreedyPolicy, RandomizedPolic
                                      expected_cost)
 from epistemic_trap.simulate import (AgentSpec, World, policy_empirical_distribution,
                                      run_agent)
+
+
+def test_large_phase3_trajectory_asset_is_gzip_compressed():
+    path = result_path("phase3_trajectories.csv")
+    assert path == Path(__file__).parents[1] / "results" / "phase3_trajectories.csv.gz"
+    with gzip.open(path, "rt", encoding="utf-8") as stream:
+        assert next(stream).startswith("episode,")
 
 
 @pytest.mark.parametrize("k", [0, 1, 3, 6])

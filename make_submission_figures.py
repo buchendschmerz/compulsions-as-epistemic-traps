@@ -16,6 +16,8 @@ from matplotlib.colors import LogNorm
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
+from epistemic_trap.config import result_path
+
 
 ROOT = Path(__file__).resolve().parent
 RESULTS = ROOT / "results"
@@ -269,7 +271,7 @@ def figure3_learning() -> None:
 
 def figure4_interventions() -> None:
     style()
-    traj = pd.read_csv(RESULTS / "phase3_trajectories.csv")
+    traj = pd.read_csv(result_path("phase3_trajectories.csv"))
     summary = pd.read_csv(RESULTS / "phase3_summary.csv")
     fig = plt.figure(figsize=(7.1, 5.25))
     gs = fig.add_gridspec(2, 2, hspace=0.88, wspace=0.43)

@@ -18,7 +18,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from epistemic_trap.config import RESULTS, WORLD
+from epistemic_trap.config import RESULTS, WORLD, result_path
 from epistemic_trap.plotstyle import (C, CONDITION_COLORS, CONDITION_LABELS,
                                       panel_label, save, use_style)
 
@@ -26,7 +26,7 @@ Q_TRUE, P_TRUE = WORLD["q"], WORLD["p"]
 
 
 def _need(*names):
-    missing = [n for n in names if not (RESULTS / n).exists()]
+    missing = [n for n in names if not result_path(n).exists()]
     if missing:
         print(f"  [skip] missing {missing}")
     return not missing
@@ -448,7 +448,7 @@ def fig6_interventions():
     import matplotlib.pyplot as plt
 
     use_style()
-    traj = pd.read_csv(RESULTS / "phase3_trajectories.csv")
+    traj = pd.read_csv(result_path("phase3_trajectories.csv"))
     summ = pd.read_csv(RESULTS / "phase3_summary.csv")
 
     cols = dict(CONDITION_COLORS)

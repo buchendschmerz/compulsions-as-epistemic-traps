@@ -42,7 +42,7 @@ free-choice follow-up that tests whether the gains persist.
 
 Outputs
 -------
-results/phase3_trajectories.csv   per-episode logs for every condition
+results/phase3_trajectories.csv.gz per-episode logs for every condition (gzip)
 results/phase3_summary.csv        end-of-block summaries
 results/phase3_blocks.csv         block means per condition
 results/phase3_hypotheses.csv     numeric verdicts on H4 and H5
@@ -51,6 +51,8 @@ results/phase3_hypotheses.csv     numeric verdicts on H4 and H5
 from __future__ import annotations
 
 import argparse
+import gzip
+import io
 import time
 
 import numpy as np
@@ -70,6 +72,14 @@ CONDITIONS = ["free_choice", "locked_k", "reassurance", "baseline_check",
               "erp_k0", "graded_erp", "variable_k", "erp_naive"]
 
 NO_PRETREATMENT = {"erp_naive"}  # conditions that start from the naive prior
+
+
+def write_compressed_csv(frame: pd.DataFrame, path) -> None:
+    """Write a deterministic gzip CSV so the raw trajectory file stays small."""
+    with path.open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0) as compressed:
+            with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as stream:
+                frame.to_csv(stream, index=False)
 
 
 def greedy():
@@ -198,7 +208,7 @@ def main():
         print(f"[phase3] {cond:>15}  ({time.time() - t0:.0f}s)")
 
     traj = pd.concat(frames, ignore_index=True)
-    traj.to_csv(RESULTS / "phase3_trajectories.csv", index=False)
+    write_compressed_csv(traj, RESULTS / "phase3_trajectories.csv.gz")
     summ = pd.DataFrame(summaries)
     summ.to_csv(RESULTS / "phase3_summary.csv", index=False)
 

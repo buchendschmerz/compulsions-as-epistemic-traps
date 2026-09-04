@@ -44,7 +44,8 @@ make_numbers.py            emits paper/numbers.tex from the result files
 tests/                     177 tests (analytic identities, conjugate Bayes, EIG)
                            ruff-clean (F, E9)
 
-results/                   every intermediate table (CSV/NPZ)
+results/                   every intermediate table (CSV/NPZ); the large
+                           phase3 trajectory log is gzip-compressed
 figures/                   PDF (for LaTeX) and PNG (for viewing)
 paper/paper_draft.tex      manuscript draft
 paper/references.bib       bibliography (Crossref-audited; see results/)
@@ -106,6 +107,9 @@ boolean.
 
 - Bayesian inference is on a 101×101 midpoint grid; `tests/test_grid.py` checks
   it against analytic Beta–Binomial posteriors and against grid refinement.
+- `results/phase3_trajectories.csv.gz` is the compressed per-episode phase-3
+  log. The figure scripts transparently accept either this file or the legacy
+  uncompressed `.csv` name.
 - The POMDP replication uses discounted value iteration on a discretised belief
   interval instead of `pomdp-solve`; `tests/test_pomdp.py` checks the transition,
   observation and reward tables against the published tables and checks

@@ -100,7 +100,7 @@ agentが毎回同じk回だけ予防してからoutcomeを観測する場合、�
 ### Day 4: 情報量指標・介入比較
 - posterior entropy, q-p相関, Fisher information, expected information gain, episode長, wash/check反復回数を算出
 - free choice / reassurance / ERP / graded ERPの4条件を比較
-- 成果物: `phase3_interventions.py` + `results/phase3_*.csv`
+- 成果物: `phase3_interventions.py` + `results/phase3_*.csv`（軌跡ログは`phase3_trajectories.csv.gz`）
 
 ### Day 5: Hysteresis & Phase Diagram
 - 危険度低下後の回復速度比較(健常 vs epistemic trap agent)
