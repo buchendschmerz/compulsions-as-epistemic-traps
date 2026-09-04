@@ -48,6 +48,61 @@ and Zenodo archiving is free.
    review period. PLOS asks for major revisions within 60 days and minor
    revisions within 30 days.
 
+## Exact finalization command
+
+After obtaining the two URLs, run these commands from the project root. A
+GitHub URL is sufficient for code availability; a Zenodo DOI can be used
+instead or added as the archival identifier.
+
+```bash
+PYTHON=/Users/dai2002/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+ORCID='https://orcid.org/0000-0000-0000-0000'
+CODE_URL='https://github.com/REPLACE_WITH_PUBLIC_REPOSITORY'
+
+"$PYTHON" build_plos_submission.py --orcid "$ORCID" --code-url "$CODE_URL"
+"$PYTHON" build_plos_cover_letter_docx.py --orcid "$ORCID" --code-url "$CODE_URL"
+"$PYTHON" /Users/dai2002/.codex/plugins/cache/openai-primary-runtime/documents/26.903.11726/skills/documents/render_docx.py \
+  output/submission/plos_compulsions_as_epistemic_traps_submission.docx \
+  --output_dir tmp/render_plos_submission_final --emit_pdf
+"$PYTHON" /Users/dai2002/.codex/plugins/cache/openai-primary-runtime/documents/26.903.11726/skills/documents/render_docx.py \
+  output/submission/plos_cover_letter.docx \
+  --output_dir tmp/render_plos_cover_letter_final --emit_pdf
+cp tmp/render_plos_submission_final/plos_compulsions_as_epistemic_traps_submission.pdf \
+  output/submission/plos_compulsions_as_epistemic_traps_submission.pdf
+cp tmp/render_plos_cover_letter_final/plos_cover_letter.pdf \
+  output/submission/plos_cover_letter.pdf
+```
+
+Before uploading, search the final DOCX/PDF for `to be added` and `must be
+inserted`; both should return no results. Keep the current placeholder version
+until the real identifiers are available.
+
+## Browser-side steps
+
+1. Register or sign in at [ORCID](https://orcid.org/register), verify the
+   email address, and copy the public 16-digit ORCID URL.
+2. Create a public GitHub repository and push the already committed local
+   release. From the project root, use
+   `git -C output/public_release remote add origin <repo-url>` followed by
+   `git -C output/public_release push -u origin main`. Do not upload the
+   manuscript PDFs to the code repository unless desired; the code release is
+   already complete.
+3. Optionally connect the GitHub repository to
+   [Zenodo](https://zenodo.org/), create a versioned release, and copy the DOI
+   URL. This is free and gives the project a permanent archival identifier.
+4. Open the [PLOS Computational Biology submission
+   system](https://www.editorialmanager.com/pcbi/default.aspx), choose Research
+   Article, and enter the title, author, affiliation, email and ORCID. Upload
+   the final manuscript PDF, cover letter, five main TIFF figures and four
+   supporting TIFF figures. Keep the DOCX ready if the system requests it.
+5. In the data/code and funding questions, paste the public URL, state that
+   no external funding is available, and submit the PLOS Publication Fee
+   Assistance request during the same submission. Requests made after
+   acceptance are not considered.
+6. Review the generated submission PDF and all metadata on the confirmation
+   page before clicking the final submit button. Save the manuscript ID and
+   Fee Assistance confirmation email.
+
 ## Source pages
 
 - PLOS submission guidelines: https://journals.plos.org/ploscompbiol/s/submission-guidelines
