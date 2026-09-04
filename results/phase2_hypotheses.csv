@@ -1,0 +1,9 @@
+hypothesis,statement,metric,value,comparison,supported
+H1,Repetitive agents keep structural uncertainty about p while uncertainty about the observable composite lambda_k collapses,"dH_lambda - dH_p (nats), severe-doubt fixed-k agents",5.385997303025803,2.7332410532186664,True
+H1b,"With the prior held fixed, more repetitions leave higher residual posterior entropy about p","corr(k, H[p]) over the controlled k-sweep (k>=1)",0.8072245023505197,0.0,True
+H2,Initial doubt survives thousands of episodes under a self-generated repetitive design,mean |E[p]-p_true| severe-doubt fixed-k vs variable-k,0.30204140402403873,0.03448052260183039,True
+H3,"Wherever the design is informative at all, q and p are POSITIVELY coupled in the posterior, as the ridge geometry predicts; the coupling peaks at small k and decays as the design stops yielding information (prior held fixed)","max_k corr(q,p) in the sweep; corr(k, corr_qp) for k>=1",0.8753425857100148,-0.9246333599999454,True
+H1c,"Information about one's own efficacy is maximised at an intermediate, SMALL number of repetitions and vanishes both at k=0 (never act) and at large k (always act): an epistemically optimal dose exists",argmax_k dH[p] = 3; dH[p] at that k vs at k=K_MAX,0.889850783960765,0.069599226814264,True
+H3c,Response prevention (k=0) leaves q and p exactly uncoupled because it never probes p,"corr(q,p) at k=0 in the controlled sweep",3.4879490808172646e-15,0.0,True
+H3b,Fixed-k designs are singular; diverse designs are not,fraction of fixed-k agents with det(I)=0,1.0,0.0,True
+TRADEOFF,The identifiable design costs harm: variable-k agents learn p but experience more harm,"harm rate, severe-doubt fixed-k vs variable-k",2.5e-05,0.09257499999999999,True

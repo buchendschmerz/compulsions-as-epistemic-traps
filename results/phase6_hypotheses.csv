@@ -1,0 +1,2 @@
+hypothesis,statement,metric,value,comparison,supported,note
+RESPONSIBILITY_FEEDBACK,A responsibility feedback from recent repetition to subjective harm cost can close the behavioural loop that uncertainty aversion alone did not close.,"late/early repetition ratio, with late mean k >= 4",0.9648073533115085,0.5699782451051486,True,first closed-loop strength=16; late k=9.58

@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "Compulsions as epistemic traps: Repetition obscures causal control"
+message: "If you use this code or data, please cite the accompanying manuscript."
+type: software
+authors:
+  - family-names: Miyazaki
+    given-names: Dai
+    affiliation: "Graduate School of Humanities and Sociology, The University of Tokyo"
+    email: dmyzk29@gmail.com
+date-released: 2026-09-04
+license: MIT
+repository-code: "https://github.com/REPLACE_WITH_PUBLIC_REPOSITORY_URL"
