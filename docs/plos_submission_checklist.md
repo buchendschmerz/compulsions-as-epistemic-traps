@@ -90,11 +90,12 @@ until the real identifiers are available.
 3. Optionally connect the GitHub repository to
    [Zenodo](https://zenodo.org/), create a versioned release, and copy the DOI
    URL. This is free and gives the project a permanent archival identifier.
-4. Open the [PLOS Computational Biology submission
-   system](https://www.editorialmanager.com/pcbi/default.aspx), choose Research
-   Article, and enter the title, author, affiliation, email and ORCID. Upload
-   the final manuscript PDF, cover letter, five main TIFF figures and four
-   supporting TIFF figures. Keep the DOCX ready if the system requests it.
+4. Open PLOS's current [Submit Now guide](https://journals.plos.org/ploscompbiol/s/submit-now),
+   follow its Editorial Manager link, choose Research Article, and enter the
+   title, author, affiliation, email and ORCID. Upload the final manuscript
+   PDF, cover letter, five main TIFF figures and four supporting TIFF figures.
+   PLOS currently specifies TIFF/EPS figures at 300-600 ppi and no more than
+   10 MB per figure. Keep the DOCX ready if the system requests it.
 5. In the data/code and funding questions, paste the public URL, state that
    no external funding is available, and submit the PLOS Publication Fee
    Assistance request during the same submission. Requests made after
