@@ -37,38 +37,26 @@ Corresponding author: \texttt{dmyzk29@gmail.com}}
 
 \begin{abstract}
 \noindent
-Compulsive safety behaviour is usually explained by what the person believes:
-that harm is likely, or that their own preventive actions do not work. We show
-that a further explanation is available which requires no faulty belief and no
-faulty learning mechanism at all. In a simple hazard model in which an episode
-begins in danger with probability $q$ and each preventive repetition removes the
-danger with probability $p$, an agent who always performs the same number $k$ of
-repetitions observes only the composite $\lamk = q(1-p)^k$. The Fisher
-information of such an observation is an outer product of a single vector, so it
-has rank one and zero determinant at every interior parameter value: under a
-repetitive safety policy, baseline hazard and personal efficacy are
-\emph{structurally non-identifiable}, however much data is collected. Repetition does not merely fail to reduce
-doubt; it removes the experimental variation that resolving the doubt would
-require. Simulating exactly-Bayesian agents that choose $k$ from their own
-posterior, we find that a repetitive agent becomes highly precise about what will
-happen to it --- its posterior uncertainty about $\lamk$ shrinks by a factor of
-$\bayesFixSdLamRatio$ --- while its uncertainty about \emph{why} does not shrink
-at all but grows; after $\bayesEpisodes$ episodes it still believes its actions
-work with probability $\bayesFixMeanP$ when in truth they work with probability
-$\worldP$, and it is confidently wrong about the baseline hazard. An otherwise identical agent whose
-policy merely varies $k$ recovers both parameters. The account reframes exposure
-with response prevention: response prevention from a naive starting point is
-provably uninformative about one's own efficacy, and works only as one half of a
-contrast between distinct action counts. It also yields a quantitative reading of
-the reassurance paradox: a check performed \emph{after} the safety action removes
-state uncertainty (``am I safe now?'') while adding essentially nothing to
-structural knowledge, whereas the same check performed \emph{before} it is
-diagnostic. We give falsifiable predictions for human data --- most sharply, that
-at matched mean exposure, greater trial-to-trial variability in the amount of
-safety behaviour predicts better recovery of one's own efficacy. We close by
-locating the phenomenon in a wider class of problems, from persistent excitation
-in system identification to selective labels in machine learning, in which the
-policy that controls a risk also decides what can be learned about it.
+Compulsive safety behaviour is commonly explained by biased beliefs about danger
+or control, or by impaired learning. We identify a complementary mechanism that
+requires neither deficit. In a hazard model, an episode starts in danger with
+probability $q$, and each preventive repetition succeeds with probability $p$.
+If an agent always repeats the action $k$ times, outcomes reveal only
+$\lamk = q(1-p)^k$. The Fisher information is rank one, so $q$ and $p$ are
+\emph{structurally non-identifiable} under any fixed-$k$ policy, regardless of
+sample size. This theorem does not depend on a biased prior. Repetition removes
+the variation needed to separate the two causes.
+Simulations of exactly Bayesian agents show how this geometry matters: with an
+initially pessimistic prior, a repetitive agent becomes precise about the observed
+harm probability while remaining wrong about its causes; varying $k$ recovers both
+parameters. Interventions restore information only when they create contrasts
+between action counts. Thus, in this model, response prevention is informative
+after a repetitive history but not from a naive start, while reassurance after
+acting reduces current-state uncertainty and adds little causal information. At
+matched mean exposure, the model predicts that trial-to-trial variability in
+safety behaviour will be associated with more accurate knowledge of personal
+efficacy. We present this as a computational mechanism and a set of falsifiable
+human predictions, not as a complete account of OCD.
 \end{abstract}
 
 \section*{Author Summary}
@@ -142,57 +130,44 @@ threat beliefs by preventing their disconfirmation
 survives even after fear has been extinguished \citep{vervliet2015low}.
 
 We propose a third possibility, orthogonal to both. Suppose the agent's belief
-updating is exactly Bayesian and its credit assignment is exact. Suppose,
-further, that it holds no distorted belief to begin with. It can still remain
-ignorant of its own efficacy for as long as it keeps behaving the same way,
-because the policy it follows decides which comparisons enter its data, and a
-repetitive safety policy admits none. We show this first as a theorem
-(Section~\ref{sec:theorem}) and then in a controlled simulation in which the
-prior is accurate and the only thing that varies is the design
-(Fig.~\ref{fig:fig3}F). The pathology is not in the learner and not in the
-belief. It is in the geometry of the evidence the learner's own behaviour
-generates.
+updating and credit assignment are exact. It can still remain ignorant of its
+own efficacy for as long as it keeps behaving the same way, because its policy
+decides which comparisons enter the data and a repetitive policy admits none.
+We show this first as a theorem (Section~\ref{sec:theorem}) and then in a
+controlled simulation that varies only the design (Fig.~\ref{fig:fig3}F). The
+mechanism lies in the geometry of the evidence the learner's behaviour generates,
+not necessarily in a learning deficit.
 
-\citet{rigoux2024beliefs} state the gap themselves: their model does not describe
-how beliefs about world contingencies are acquired, their agent parameters are
-static point estimates rather than time-varying posteriors, and they identify a
-Bayesian formulation as the natural extension needed to separate confidence from
-bias. This paper is that extension, and it arrives at a conclusion their static
-model could not express.
+\citet{rigoux2024beliefs} state a related gap: their model does not describe how
+beliefs about world contingencies are acquired, and its agent parameters are
+static point estimates rather than time-varying posteriors. Our extension makes
+that acquisition problem explicit and separates what follows from information
+structure from what depends on belief or credit-assignment parameters.
 
 \subsection{What is new}
 
-\paragraph{A mathematical result.} Under a policy that always performs the same
-number of preventive repetitions, the baseline hazard and the efficacy of one's
-own action are not merely hard to estimate; they are non-identifiable, and this
-is provable rather than empirical. The information matrix of the terminal outcome
-is rank one for every $k$ and every interior $(q,p)$
-(Proposition~\ref{prop:rank1}).
+\paragraph{A mathematical result.} Under a fixed repetition count, baseline
+hazard and personal efficacy are non-identifiable, not merely difficult to
+estimate. The terminal-outcome information matrix is rank one for every $k$ and
+every interior $(q,p)$ (Proposition~\ref{prop:rank1}).
 
-\paragraph{A relocation of the mechanism.} Because the result holds for a
-normative learner, it separates cleanly from the belief-bias account of
-\citet{rigoux2024beliefs}, the credit-assignment account of
-\citet{sakai2022eligibility}, the state-uncertainty account of
-\citet{fradkin2020latent}, the habit account of \citet{gillan2014enhanced}, and
-accounts based on distorted causal beliefs. It is not a claim that people with
-obsessive-compulsive disorder learn badly. It is a claim that a certain shape of
-behaviour destroys the evidence that any learner would need.
+\paragraph{A mechanism independent of learner failure.} The result holds for an
+ideal Bayesian learner, so it does not require impaired updating or credit
+assignment. The simulations use a deliberately pessimistic initial prior; the
+theorem itself is prior-independent. The claim is about the evidence generated
+by a policy, not about how people with obsessive-compulsive disorder learn in
+general.
 
-\paragraph{A reformulation of exposure and response prevention.} It is tempting
-to say that response prevention restores identifiability by letting the person
-find out what happens when they do not act. That is not quite right, and the
-model says exactly how. Setting $k=0$ makes the outcome a direct sample of the
-baseline hazard $q$ and supplies \emph{exactly zero} information about $p$: the
-likelihood does not depend on $p$ at all. Response prevention is not a probe of
-efficacy. It is one half of a contrast, and it is informative about efficacy only
-in combination with episodes run at a different $k$. What restores
-identifiability is variation in the policy, not the absence of the safety action.
+\paragraph{A sharper account of response prevention.} Setting $k=0$ samples the
+baseline hazard $q$ but supplies zero information about $p$. Response prevention
+is informative about efficacy only when it is combined with episodes at a
+different action count. What restores identifiability is policy variation, not
+the absence of safety behaviour by itself.
 
-\paragraph{A dissociation with a clinical name.} Because state uncertainty and
-structural uncertainty are separate quantities in the model, we can ask what a
-reassurance-like probe does to each. It collapses the first and barely moves the
-second --- and, strikingly, the same probe moved to \emph{before} the safety
-action becomes genuinely diagnostic.
+\paragraph{A temporal dissociation.} State uncertainty and structural
+uncertainty are distinct in the model. A reassurance-like probe after acting
+reduces the former but barely changes the latter; the same probe before acting is
+diagnostic about the latent causes.
 
 \subsection{The general principle}
 
@@ -292,10 +267,11 @@ $\Ifisher_k$ is a scalar multiple of the outer product of a single vector with
 itself, hence has rank at most one; it is exactly one at interior $\theta$ since
 $\nabla_\theta\lamk \neq 0$. A $2\times2$ matrix of rank one has zero
 determinant. Independent observations add information, so the total information
-from $n$ episodes at the same $k$ is $n\Ifisher_k$, still singular. By
-\citet{rothenberg1971identification}, singularity of the information matrix at
-$\theta$ (under the usual regularity conditions, which hold here) is equivalent
-to the failure of local identifiability.
+from $n$ episodes at the same $k$ is $n\Ifisher_k$, still singular. The explicit
+ridge in Corollary~\ref{cor:ridge} establishes the failure of local
+identifiability directly; the Fisher calculation records its local rank
+deficiency. This is the distinction between a parameterisation that is not
+identified and an estimator that is merely imprecise.
 \end{proof}
 
 The derivation is verified symbolically in \texttt{phase1\_nonidentifiability.py}
@@ -560,9 +536,9 @@ repetition into future motivation.
 \label{sec:interventions}
 
 Figure~\ref{fig:fig6} compares eight interventions applied after an identical
-pre-treatment period, with an identical free-choice follow-up. All
-$\nHypSupported$ of $\nHypTotal$ pre-registered predictions were supported
-(\texttt{results/phase3\_hypotheses.csv}).
+pre-treatment period, with an identical free-choice follow-up. We evaluated
+$\nHypTotal$ pre-specified simulation contrasts; their operational outcomes are
+listed in \texttt{results/phase3\_hypotheses.csv}.
 
 \paragraph{Response prevention costs what it is supposed to cost.} During
 treatment, the agent's own probability that harm is imminent at the moment of
@@ -603,8 +579,8 @@ uncertainty about whether one's own action caused safety.
 \paragraph{The trap has a second face: under-protection.} At follow-up, agents
 whose treatment diversified the design remain closer to the truth about their own
 efficacy ($|\mathbb{E}[p]-p^\ast| = \durVariable$ versus $\durFree$ for
-untreated). What they also do is act \emph{more}. This was not what we expected,
-and it is worth stating carefully.
+untreated). What they also do is act \emph{more}. The direction is not uniformly
+therapeutic: correcting the model can increase subsequent protection.
 
 By the end of the pre-treatment block every agent has settled at
 $k \approx \preMeanK$ with $\mathbb{E}[p\mid D] = \preMeanP$ --- still far below
@@ -640,8 +616,8 @@ of the baseline hazard raise it.}
 \subsection{Where the trap lives, and what escapes it}
 
 Sweeping the agent's initial belief about its own efficacy against the cost of
-harm (Fig.~\ref{fig:fig4}) locates the trap, and the shape it takes is not the
-one we expected. Initial doubt dominates: residual error in the efficacy belief
+harm (Fig.~\ref{fig:fig4}) locates the trap. Initial doubt dominates: residual
+error in the efficacy belief
 falls from $\phaseHighDoubtErr$ for the most doubtful agents to
 $\phaseLowDoubtErr$ for the most confident ($r = \phaseCorrDoubtErr$). The cost of
 harm sets how much safety behaviour is performed ($r = \phaseCorrCostK$ against
@@ -791,16 +767,17 @@ $\sevRegFull$ ($p \sevRegEigP$). Severity is predicted by how uncertain you are
 and by how little your own behaviour tells you, not only by how low your estimate
 is.
 
-The corresponding human study is straightforward: a task in which participants
-choose how many preventive actions to take before an outcome, fitted with this
-generative model. The predictions are that (i) at matched mean exposure,
+A direct human test would ask participants to choose how many preventive actions
+to take before an outcome and fit this generative model. The predictions are
+that (i) at matched mean exposure,
 participants with higher trial-to-trial variability recover the true efficacy
 parameter better; (ii) symptom severity is predicted by posterior uncertainty
 about efficacy and by policy-induced information over and above the posterior
 mean; and (iii) a reassurance-like probe reduces momentary confidence ratings
 without improving efficacy estimates, while the same probe delivered before the
 safety action improves both. If the posterior mean $\mathbb{E}[p]$ absorbs all
-the variance, this account is wrong and the belief-bias account is sufficient.
+the variance, that would count against a contribution from policy-generated
+information beyond belief bias.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\textwidth]{fig7_predictions.pdf}
@@ -815,10 +792,10 @@ comparison for severity.}
 
 \subsection{Where this sits}
 
-Table~\ref{tab:accounts} places the account among its neighbours. The claim is
-not that existing accounts are wrong. It is that a mechanism exists which none of
-them contains, which requires no deficit of any kind, and which predicts
-different things.
+Table~\ref{tab:accounts} places the account among neighbouring proposals. The
+claim is not that existing accounts are wrong; it is that policy-generated
+non-identifiability is not explicitly represented in the cited accounts and
+generates different predictions without assuming a learning deficit.
 
 \begin{table}[t]\centering\small
 \begin{tabular}{p{3.4cm}p{4.6cm}p{6.2cm}}
@@ -868,9 +845,9 @@ against treating action frequency as the measure of the underlying disturbance.
 thing.} It reduces state uncertainty efficiently and structural uncertainty
 hardly at all. This gives the well-known clinical observation --- reassurance
 helps now and maintains the problem later --- a quantitative form, and it
-suggests a concrete manipulation: the same checking behaviour, performed
-\emph{before} rather than after the safety action, becomes diagnostic. Whether
-this transfers to people is an empirical question, and a cheap one to ask.
+suggests a concrete manipulation: in this model, the same checking behaviour,
+performed \emph{before} rather than after the safety action, becomes diagnostic.
+Whether this transfers to people remains an empirical question.
 
 \paragraph{Response prevention should be understood as design, not as
 extinction.} The dominant theory of exposure treats it as inhibitory learning
@@ -954,7 +931,8 @@ episode rather than choosing repetition by repetition. The environment is
 stationary except where explicitly ramped, and the agent has no model of change,
 so its ability to track a moving hazard depends on an exponential forgetting
 factor rather than on a change-point model. Harm is observed without noise, which
-is generous to the agent; observation noise would only deepen the trap. Our
+is generous to the agent; observation noise would not restore identification and
+would generally reduce information. Our
 interventions are idealised: a real ERP protocol changes many things at once, and
 we have isolated one of them. Finally, no human data are analysed here; the
 account stands or falls on the predictions in Section~3.8, and we have tried to

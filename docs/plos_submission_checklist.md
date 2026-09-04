@@ -8,7 +8,7 @@
 - Supporting figures: `output/submission/figures/S1_Fig.tif` through `S4_Fig.tif`
 - Reproduction source: `output/public_release/`
 
-The manuscript uses the PLOS title limit, six keywords, a 189-word Author
+The manuscript uses the PLOS title limit, five keywords, a 189-word Author
 Summary, CRediT roles for the sole author, an ethics statement, the required
 unfunded statement, a competing-interests statement, and an AI-use disclosure.
 It is double-spaced with continuous line numbers and page numbers.

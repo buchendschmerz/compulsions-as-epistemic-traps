@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LogNorm
+from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 
@@ -272,13 +273,15 @@ def figure4_interventions() -> None:
     summary = pd.read_csv(RESULTS / "phase3_summary.csv")
     fig = plt.figure(figsize=(7.1, 5.25))
     gs = fig.add_gridspec(2, 2, hspace=0.88, wspace=0.43)
+    # Use a colour-blind-friendly categorical palette so similar interventions
+    # remain distinguishable in print and on projectors.
     colors = {
-        "locked_k": MUTED,
-        "reassurance": PURPLE,
-        "baseline_check": GOLD,
-        "erp_k0": TEAL,
-        "graded_erp": "#7353A2",
-        "variable_k": BLUE,
+        "locked_k": "#4D4D4D",
+        "reassurance": "#E69F00",
+        "baseline_check": "#0072B2",
+        "erp_k0": "#009E73",
+        "graded_erp": "#CC79A7",
+        "variable_k": "#D55E00",
     }
     labels = {
         "locked_k": "Locked k",
@@ -298,9 +301,6 @@ def figure4_interventions() -> None:
     ax.axhline(0.80, color=INK, ls=":", lw=0.9)
     ax.set(xlabel="Episode", ylabel="Mean efficacy belief, E[p | D]",
            title="Efficacy belief during intervention")
-    ax.legend(frameon=False, ncol=2, loc="upper center",
-              bbox_to_anchor=(0.5, -0.24), handlelength=1.5,
-              columnspacing=0.8, borderaxespad=0.0)
     panel(ax, "A")
 
     means = summary.groupby(["condition", "block"]).mean(numeric_only=True)
@@ -334,8 +334,8 @@ def figure4_interventions() -> None:
     ax.annotate("Check after acting", (reass.d_H_state,
                 reass.logdens_true - reass_pre.logdens_true),
                 xytext=(-72, 10), textcoords="offset points",
-                arrowprops={"arrowstyle": "->", "color": PURPLE},
-                fontsize=6.8, color=PURPLE)
+                arrowprops={"arrowstyle": "->", "color": colors["reassurance"]},
+                fontsize=6.8, color=colors["reassurance"])
     panel(ax, "C")
 
     ax = fig.add_subplot(gs[1, 1])
@@ -353,7 +353,14 @@ def figure4_interventions() -> None:
            title="Change in repetitions at follow-up")
     panel(ax, "D")
 
-    fig.subplots_adjust(left=0.10, right=0.98, bottom=0.09, top=0.91)
+    handles = [
+        Line2D([0], [0], color=colors[condition], lw=2.2, label=labels[condition])
+        for condition in conditions
+    ]
+    fig.legend(handles=handles, ncol=3, loc="lower center",
+               bbox_to_anchor=(0.5, 0.005), frameon=False, fontsize=7.0,
+               handlelength=1.6, columnspacing=1.0, handletextpad=0.45)
+    fig.subplots_adjust(left=0.10, right=0.98, bottom=0.19, top=0.91)
     finish(fig, "figure_4_interventions")
 
 
