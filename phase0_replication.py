@@ -195,10 +195,11 @@ def make_figure(agents, stats):
     import matplotlib.pyplot as plt
 
     use_style()
-    fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.1))
+    fig = plt.figure(figsize=(7.2, 5.1))
+    gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92])
 
     # A: belief distortions by group
-    ax = axes[0]
+    ax = fig.add_subplot(gs[0, 0])
     names = list(PRETTY)
     pos = np.arange(len(names))
     for j, (grp, col) in enumerate([("non_compulsive", C["healthy"]),
@@ -219,10 +220,10 @@ def make_figure(agents, stats):
     ax.set_xlabel(r"belief distortion  (agent $-$ world)")
     ax.set_title("Belief distortions by group\n(mean, with interquartile range)")
     ax.legend(loc="lower left")
-    panel_label(ax, "A", dx=-0.42)
+    panel_label(ax, "A")
 
     # B: effect sizes
-    ax = axes[1]
+    ax = fig.add_subplot(gs[0, 1])
     d = stats.set_index("param").loc[names, "cohens_d"].values
     colors = [C["compulsive"] if n == "p_success" else C["neutral"] for n in names]
     ax.barh(pos, d, color=colors, height=0.6)
@@ -232,11 +233,11 @@ def make_figure(agents, stats):
     ax.invert_yaxis()
     ax.set_xlabel("Cohen's $d$ (compulsive $-$ non-compulsive)")
     ax.set_title("Effect sizes")
-    panel_label(ax, "B", dx=-0.42)
+    panel_label(ax, "B")
 
     # C: severity gradient. Episode lengths are heavy-tailed, so we summarise with
     # medians and quantify with Spearman rank correlation rather than Pearson.
-    ax = axes[2]
+    ax = fig.add_subplot(gs[1, :])
     from scipy import stats as sps
     sub = agents[agents.group == "compulsive"]
     bins = np.unique(np.quantile(sub.d_p_success, np.linspace(0, 1, 9)))
@@ -260,7 +261,7 @@ def make_figure(agents, stats):
             rf"$\rho={rho2:+.2f}$ (fraction of non-consequential actions)",
             transform=ax.transAxes, fontsize=6.8, color=C["neutral"], va="bottom")
     ax.legend(loc="upper right")
-    panel_label(ax, "C", dx=-0.30)
+    panel_label(ax, "C")
 
     return save(fig, "fig_S1_replication")
 

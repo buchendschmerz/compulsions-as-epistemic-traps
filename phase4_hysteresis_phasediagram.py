@@ -17,11 +17,10 @@ behavioural loop area and the belief calibration error, split by limb.
 
 Part A2: step removal of the hazard
 -----------------------------------
-A sharper version: the hazard is removed outright.  How long does the agent go on
-protecting itself against a danger that no longer exists?  This is also where a
-second, independent trap appears: an agent that copes by *checking* rather than by
-varying its actions runs into the false-positive floor of its own test, and
-sustains a phantom hazard indefinitely.
+A sharper version removes the hazard outright and asks how long the agent goes on
+protecting itself against a danger that no longer exists.  The comparison tests
+whether action-count variation, a response-prevention quota, information seeking,
+or a pre-action state probe supports faster recalibration.
 
 Part B: phase diagram
 ---------------------

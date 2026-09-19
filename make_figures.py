@@ -6,9 +6,9 @@ Usage
     python3 make_figures.py            # all figures that have data available
     python3 make_figures.py 1 3 6      # only these
 
-Figure 2 is produced by ``phase1_nonidentifiability.py`` and Figure S1 by
-``phase0_replication.py``, because both are cheap to regenerate alongside their
-analyses.
+Figure 2 is produced by ``phase1_nonidentifiability.py``. The developmental
+Rigoux implementation check remains available from ``phase0_replication.py``
+but is not part of the submission figure set.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from epistemic_trap.config import RESULTS, WORLD, result_path
+from epistemic_trap.config import RESULTS, WORLD
 from epistemic_trap.plotstyle import (C, CONDITION_COLORS, CONDITION_LABELS,
                                       panel_label, save, use_style)
 
@@ -26,7 +26,7 @@ Q_TRUE, P_TRUE = WORLD["q"], WORLD["p"]
 
 
 def _need(*names):
-    missing = [n for n in names if not result_path(n).exists()]
+    missing = [n for n in names if not (RESULTS / n).exists()]
     if missing:
         print(f"  [skip] missing {missing}")
     return not missing
@@ -76,9 +76,10 @@ def fig1_concept():
         "#F3F3F3", C["neutral"])
     for a_y, b_y in zip(ys[:-1], ys[1:]):
         arrow(ax, (0.44, a_y - 0.082), (0.44, b_y + 0.062))
-    arrow(ax, (0.80, ys[3]), (0.80, ys[1] - 0.058), color=C["neutral"], rad=-0.55)
-    ax.text(0.93, 0.38, "state belief feeds back", fontsize=6.8, rotation=270,
-            va="center", ha="center", color=C["neutral"])
+    arrow(ax, (0.58, ys[3] + 0.06), (0.58, ys[1] - 0.06),
+          color=C["neutral"])
+    ax.text(0.62, 0.38, "state belief\nfeeds back", fontsize=6.8,
+            va="center", ha="left", color=C["neutral"])
     ax.annotate("nothing returns to the top box:\n"
                 "contingency beliefs never change",
                 xy=(0.155, ys[0] - 0.072), xytext=(0.40, -0.15),
@@ -274,7 +275,8 @@ def fig4_phase_diagram():
         g = df.groupby([y, x])[v].mean().unstack()
         return g.columns.values, g.index.values, g.values
 
-    fig, axes = plt.subplots(1, 4, figsize=(12.4, 3.2))
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.5))
+    axes = axes.ravel()
 
     # A: how much safety behaviour
     ax = axes[0]
@@ -377,11 +379,12 @@ def fig5_hysteresis():
     arm_lab = {"locked": "locked design (deterministic)",
                "quota": "25% response-prevention quota",
                "curious": "information-seeking",
-               "checker": "checks instead of varying"}
+               "checker": "pre-action probe without action variation"}
     arm_short = {"locked": "locked\ndesign", "quota": "25% RP\nquota",
-                 "curious": "information\nseeking", "checker": "checks, no\nvariation"}
+                 "curious": "information\nseeking", "checker": "pre-action probe\nno variation"}
 
-    fig, axes = plt.subplots(1, 4, figsize=(12.6, 3.2))
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.4))
+    axes = axes.ravel()
 
     # A/B: the loops themselves
     for j, arm in enumerate(["locked", "quota"]):
@@ -446,9 +449,10 @@ def fig6_interventions():
     if not _need("phase3_trajectories.csv", "phase3_summary.csv"):
         return None
     import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
 
     use_style()
-    traj = pd.read_csv(result_path("phase3_trajectories.csv"))
+    traj = pd.read_csv(RESULTS / "phase3_trajectories.csv")
     summ = pd.read_csv(RESULTS / "phase3_summary.csv")
 
     cols = dict(CONDITION_COLORS)
@@ -456,24 +460,23 @@ def fig6_interventions():
                 erp_naive="#8FA6B2")
     labs = dict(CONDITION_LABELS)
     labs.update(locked_k="Locked $k$ (no diversification)",
-                baseline_check="Check BEFORE acting",
+                baseline_check="Pre-action state probe",
                 erp_naive="Response prevention, no history",
-                reassurance="Reassurance (check AFTER acting)")
+                reassurance="Post-action state probe")
     order = ["free_choice", "locked_k", "reassurance", "baseline_check",
              "erp_k0", "graded_erp", "variable_k"]
-    # hand-tuned label offsets so the clustered untreated arms stay legible
-    offs_d = {"free_choice": (6, 6), "locked_k": (34, -9), "reassurance": (6, 4),
-              "baseline_check": (6, 2), "erp_k0": (6, -10),
-              "graded_erp": (6, 4), "variable_k": (6, 4)}
-    offs_e = {"free_choice": (6, 7), "locked_k": (34, -9), "reassurance": (6, -11),
-              "baseline_check": (6, 4), "erp_k0": (-6, -14),
-              "graded_erp": (6, 4), "variable_k": (6, -10)}
+    markers = {"free_choice": "o", "locked_k": "s", "reassurance": "v",
+               "baseline_check": "^", "erp_k0": "D", "graded_erp": "P",
+               "variable_k": "X"}
+    linestyles = {"free_choice": "-", "locked_k": "--", "reassurance": "-.",
+                  "baseline_check": ":", "erp_k0": (0, (5, 2)),
+                  "graded_erp": (0, (3, 1, 1, 1)), "variable_k": (0, (7, 2))}
 
     n_pre = int(traj[traj.block == "pre"].episode.max())
     n_tx = int(traj[traj.block == "tx"].episode.max())
 
-    fig = plt.figure(figsize=(12.4, 6.4))
-    gs = fig.add_gridspec(2, 3)
+    fig = plt.figure(figsize=(12.4, 7.6), layout="none")
+    gs = fig.add_gridspec(3, 3, height_ratios=[1.0, 0.14, 1.0])
 
     def shade(ax):
         ax.axvspan(n_pre, n_tx, color="#000000", alpha=0.045, linewidth=0)
@@ -483,18 +486,19 @@ def fig6_interventions():
     ax = fig.add_subplot(gs[0, 0])
     for c in order:
         sub = traj[traj.condition == c]
-        ax.plot(sub.groupby("episode").mean_p.mean(), color=cols[c], label=labs[c])
+        ax.plot(sub.groupby("episode").mean_p.mean(), color=cols[c],
+                linestyle=linestyles[c], label=labs[c])
     ax.axhline(P_TRUE, color="k", lw=0.9, ls=":")
     ax.set_xlabel("episode"); ax.set_ylabel(r"$\mathbb{E}[p\mid D]$")
     ax.set_title("Belief in one's own efficacy")
     shade(ax)
-    ax.legend(fontsize=6.3, loc="upper left")
     panel_label(ax, "A")
 
     ax = fig.add_subplot(gs[0, 1])
     for c in order:
         sub = traj[traj.condition == c]
-        ax.plot(sub.groupby("episode").logdens_true.mean(), color=cols[c])
+        ax.plot(sub.groupby("episode").logdens_true.mean(), color=cols[c],
+                linestyle=linestyles[c])
     ax.set_xlabel("episode")
     ax.set_ylabel(r"$\log P(q^\ast,p^\ast\mid D)$")
     ax.set_title("Knowledge of the truth\n(a proper score, not mere confidence)")
@@ -505,44 +509,39 @@ def fig6_interventions():
     for c in order:
         sub = traj[traj.condition == c]
         ax.plot(sub.groupby("episode").k.mean().rolling(25, min_periods=5).mean(),
-                color=cols[c])
+                color=cols[c], linestyle=linestyles[c])
     ax.set_xlabel("episode"); ax.set_ylabel("repetitions $k$")
     ax.set_title("Behaviour")
     shade(ax)
     panel_label(ax, "C")
 
     # D: the dissociation
-    ax = fig.add_subplot(gs[1, 0])
+    ax = fig.add_subplot(gs[2, 0])
     tx = summ[summ.block == "tx"].groupby("condition")
     pre = summ[summ.block == "pre"].groupby("condition")
     state = (tx.d_H_state.mean()).reindex(order)
     struct = (tx.logdens_true.mean() - pre.logdens_true.mean()).reindex(order)
-    ax.scatter(state.values, struct.values, s=70,
-               c=[cols[c] for c in order], edgecolors="k", linewidths=0.5, zorder=3)
     for c, x, y in zip(order, state.values, struct.values):
-        ax.annotate(labs[c], (x, y), fontsize=6.3, xytext=offs_d[c],
-                    textcoords="offset points")
+        ax.scatter(x, y, s=68, color=cols[c], marker=markers[c],
+                   edgecolors="k", linewidths=0.5, zorder=3)
     ax.set_xlabel(r'state uncertainty removed  ("am I safe now?", nats)')
     ax.set_ylabel("structural knowledge gained (nats)")
-    ax.set_title("The reassurance paradox, quantified")
+    ax.set_title("State information is not causal information")
     panel_label(ax, "D")
 
     # E: knowledge gained vs harm paid
-    ax = fig.add_subplot(gs[1, 1])
+    ax = fig.add_subplot(gs[2, 1])
     harm = tx.harm_rate.mean().reindex(order)
-    ax.scatter(harm.values, struct.values, s=70, c=[cols[c] for c in order],
-               edgecolors="k", linewidths=0.5, zorder=3)
     for c, x, y in zip(order, harm.values, struct.values):
-        ha = "right" if offs_e[c][0] < 0 else "left"
-        ax.annotate(labs[c], (x, y), fontsize=6.3, xytext=offs_e[c],
-                    textcoords="offset points", ha=ha)
+        ax.scatter(x, y, s=68, color=cols[c], marker=markers[c],
+                   edgecolors="k", linewidths=0.5, zorder=3)
     ax.set_xlabel("harm experienced during treatment")
     ax.set_ylabel("structural knowledge gained (nats)")
     ax.set_title("The price of finding out")
     panel_label(ax, "E")
 
     # F: follow-up behaviour relative to baseline
-    ax = fig.add_subplot(gs[1, 2])
+    ax = fig.add_subplot(gs[2, 2])
     post = summ[summ.block == "post"].groupby("condition").mean_k.mean()
     base = summ[summ.block == "pre"].groupby("condition").mean_k.mean()
     delta = (post - base).reindex(order)
@@ -556,105 +555,109 @@ def fig6_interventions():
     ax.set_title("What is left after treatment stops")
     panel_label(ax, "F", dx=-0.55)
 
+    handles = [
+        Line2D([0], [0], color=cols[c], linestyle=linestyles[c], lw=1.7,
+               marker=markers[c], markersize=4.5, markeredgecolor="k",
+               markeredgewidth=0.4, label=labs[c])
+        for c in order
+    ]
+    legend_ax = fig.add_subplot(gs[1, :])
+    legend_ax.axis("off")
+    legend_ax.legend(handles=handles, loc="center", ncol=4, fontsize=6.4,
+                     handlelength=1.9, columnspacing=1.0)
+    fig.subplots_adjust(left=0.07, right=0.985, bottom=0.08, top=0.95,
+                        wspace=0.38, hspace=0.34)
+
     return save(fig, "fig6_interventions")
 
 
 # =============================================================== Figure 7
 def fig7_predictions():
     """Falsifiable predictions for a human experiment."""
-    if not _need("phase5_variance_matched.csv", "phase5_population.csv",
-                 "phase5_regression.csv"):
+    if not _need("phase5_variance_matched.csv"):
         return None
     import matplotlib.pyplot as plt
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
     use_style()
     vm = pd.read_csv(RESULTS / "phase5_variance_matched.csv")
-    pop = pd.read_csv(RESULTS / "phase5_population.csv")
-    reg = pd.read_csv(RESULTS / "phase5_regression.csv")
+    order = ["fixed {3}", "{2,4}", "{1,5}", "uniform 0..6"]
+    display = ["Fixed {3}", "{2,4}", "{1,5}", "Uniform 0-6"]
+    variances = [0, 1, 4, 4]
+    colors = ["#4D4D4D", "#0072B2", "#D55E00", "#009E73"]
+    schedules = np.zeros((4, 7))
+    schedules[0, 3] = 1.0
+    schedules[1, [2, 4]] = 0.5
+    schedules[2, [1, 5]] = 0.5
+    schedules[3, :] = 1 / 7
 
-    fig, axes = plt.subplots(1, 4, figsize=(12.6, 3.2))
+    fig = plt.figure(figsize=(10.8, 6.0))
+    gs = fig.add_gridspec(2, 2, hspace=0.42, wspace=0.42)
 
-    # A: matched mean exposure, varying variability
-    ax = axes[0]
-    g = vm.groupby(["design", "var_k"]).sd_p.agg(["mean", "std"]).reset_index()
-    g = g.sort_values("var_k")
-    ax.errorbar(g.var_k, g["mean"], yerr=g["std"], fmt="o", ms=6, capsize=3,
-                color=C["compulsive"], zorder=3)
-    b, a = np.polyfit(g.var_k, g["mean"], 1)
-    xs = np.linspace(g.var_k.min(), g.var_k.max(), 20)
-    ax.plot(xs, a + b * xs, ls="--", lw=1.1, color=C["neutral"], zorder=1)
-    for _, r in g.iterrows():
-        ax.annotate(r["design"], (r.var_k, r["mean"]), fontsize=6.4,
-                    xytext=(5, 5), textcoords="offset points")
-    ax.set_xlabel(r"variance of the design, $\mathrm{Var}(k)$")
-    ax.set_ylabel(r"posterior SD of efficacy, $\mathrm{SD}[p\mid D]$")
-    ax.set_title(r"Matched exposure ($\mathbb{E}[k]=3$):"
-                 "\nvariability, not amount, buys knowledge")
+    ax = fig.add_subplot(gs[0, 0])
+    ax.imshow(schedules, cmap="Blues", vmin=0, vmax=1, aspect="auto")
+    for row in range(4):
+        for col in range(7):
+            value = schedules[row, col]
+            if value > 0:
+                text = "1" if value == 1 else ("1/2" if value == .5 else "1/7")
+                ax.text(col, row, text, ha="center", va="center", fontsize=7.4,
+                        color="white" if value >= .5 else "black", fontweight="bold")
+    ax.set_xticks(np.arange(7))
+    ax.set_yticks(np.arange(4),
+                  [f"{name}  (Var={variance})" for name, variance in zip(display, variances)])
+    ax.set_xlabel("assigned action count $k$")
+    ax.set_title(r"Four randomized schedules with $\mathbb{E}[k]=3$")
+    ax.tick_params(length=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     panel_label(ax, "A")
 
-    # B: the cost of that knowledge
-    ax = axes[1]
-    g2 = vm.groupby(["design", "var_k"])[["harm_rate", "abs_err_p"]].mean().reset_index()
-    g2 = g2.sort_values("var_k")
-    ax.plot(g2.harm_rate, g2.abs_err_p, "o", ms=6, color=C["healthy"])
-    for _, r in g2.iterrows():
-        ax.annotate(r["design"], (r.harm_rate, r.abs_err_p), fontsize=6.4,
-                    xytext=(5, 4), textcoords="offset points")
-    ax.set_xlabel("harm rate")
-    ax.set_ylabel(r"$|\mathbb{E}[p\mid D]-p^\ast|$")
-    ax.set_title("Every bit of self-knowledge\nis paid for in risk")
-    panel_label(ax, "B")
+    grouped = vm[vm.design.isin(order)].groupby("design")
+    y = np.arange(4)
+    for position, (column, xlabel, title, label) in enumerate([
+        ("sd_p", r"posterior $\mathrm{SD}[p\mid D]$",
+         "Uncertainty after matched exposure", "B"),
+        ("abs_err_p", r"$|\mathbb{E}[p\mid D]-p^\ast|$",
+         "Primary simulated outcome", "C"),
+    ]):
+        ax = fig.add_subplot(gs[position, 1 if position == 0 else 0])
+        means = getattr(grouped, column).mean().reindex(order)
+        errors = getattr(grouped, column).std().reindex(order)
+        for i in range(4):
+            ax.errorbar(means.iloc[i], i, xerr=errors.iloc[i], fmt="o",
+                        color=colors[i], ecolor=colors[i], capsize=3, ms=6,
+                        markeredgecolor="black", markeredgewidth=0.4)
+        ax.set_yticks(y, display)
+        ax.invert_yaxis()
+        ax.set_xlabel(xlabel)
+        ax.set_title(title)
+        panel_label(ax, label)
 
-    # C: population-level individual differences, stratified by severity
-    ax = axes[2]
-    sc = ax.scatter(pop.var_k, pop.sd_p, c=pop.severity, cmap="magma", s=13,
-                    edgecolors="none", alpha=0.75)
-    strata = pd.qcut(pop.severity, 3, labels=["low", "mid", "high"])
-    for lab, ls in zip(["low", "mid", "high"], ["-", "--", ":"]):
-        g3 = pop[strata == lab]
-        b, a = np.polyfit(g3.var_k, g3.sd_p, 1)
-        xs = np.linspace(g3.var_k.min(), g3.var_k.max(), 20)
-        r = np.corrcoef(g3.var_k, g3.sd_p)[0, 1]
-        ax.plot(xs, a + b * xs, ls, lw=1.5, color=C["ridge"],
-                label=f"{lab} severity, $r={r:+.2f}$")
-    ax.set_xlabel(r"behavioural variability $\mathrm{Var}(k)$")
-    ax.set_ylabel(r"$\mathrm{SD}[p\mid D]$")
-    ax.set_title("Matched on severity, those who vary\nknow their own efficacy better")
-    ax.legend(loc="upper right", fontsize=6.2)
-    fig.colorbar(sc, ax=ax, label="severity (mean $k$)", pad=0.02)
-    panel_label(ax, "C")
+    ax = fig.add_subplot(gs[1, 1])
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
 
-    # D: nested model comparison, plus the stratified (non-circular) check
-    ax = axes[3]
-    labels = [r"$\mathbb{E}_0[p]$" + "\n(where they started)",
-              r"$+$ severity", r"$+\ \mathrm{Var}(k)$",
-              r"$+\ \mathrm{EIG}(\pi)$"]
-    colr = [C["neutral"], C["mild"], C["graded"], C["healthy"]]
-    ax.bar(np.arange(len(reg)), reg.adj_r2.values, color=colr, width=0.62)
-    for i, (r2, pv) in enumerate(zip(reg.adj_r2, reg.p_vs_previous)):
-        if not np.isfinite(pv):
-            txt = f"{r2:.2f}"
-        elif pv < 1e-6:
-            txt = f"{r2:.2f}\n$p<10^{{-6}}$"
-        elif pv < 0.05:
-            txt = f"{r2:.2f}\n$p={pv:.3f}$"
-        else:
-            txt = f"{r2:.2f}\nn.s."
-        ax.text(i, r2 + 0.02, txt, ha="center", fontsize=6.4)
-    ax.set_xticks(np.arange(len(reg)))
-    ax.set_xticklabels(labels, fontsize=6.4)
-    ax.set_ylim(0, 0.92)
-    ax.set_ylabel(r"adjusted $R^2$ for $|\mathbb{E}[p\mid D]-p^\ast|$")
-    ax.set_title("What predicts how accurate\nsomeone ends up about themselves")
-    if (RESULTS / "phase5_stratified.csv").exists():
-        st = pd.read_csv(RESULTS / "phase5_stratified.csv")
-        ax.text(0.03, 0.97,
-                "within severity strata:\n"
-                + "\n".join(f"  $r(\\mathrm{{Var}}(k),\\mathrm{{SD}}[p])"
-                            f"={r.corr_vark_sdp:+.2f}$  ($\\bar k$={r.mean_severity:.1f})"
-                            for _, r in st.iterrows()),
-                transform=ax.transAxes, va="top", ha="left", fontsize=6.0,
-                color=C["neutral"])
+    def flow_box(x, text, face, edge):
+        ax.add_patch(FancyBboxPatch((x, 0.60), 0.25, 0.23,
+                                    boxstyle="round,pad=0.015,rounding_size=0.02",
+                                    facecolor=face, edgecolor=edge, linewidth=1.1))
+        ax.text(x + 0.125, 0.715, text, ha="center", va="center", fontsize=7.5)
+
+    flow_box(0.01, "Randomize\nschedule", "#E8EEF4", "#0072B2")
+    flow_box(0.375, "Estimate $q$, $p$,\nand confidence\nafter each block",
+             "#E9F1EE", "#009E73")
+    flow_box(0.74, "Final efficacy\nerror\n(primary)", "#F7E4E2", "#D55E00")
+    for start, end in [((0.26, 0.715), (0.375, 0.715)),
+                       ((0.625, 0.715), (0.74, 0.715))]:
+        ax.add_patch(FancyArrowPatch(start, end, arrowstyle="-|>",
+                                     mutation_scale=10, linewidth=1.1, color="black"))
+    ax.text(0.01, 0.39, "Primary: fixed {3} versus informative schedules",
+            fontsize=7.5, fontweight="bold")
+    ax.text(0.01, 0.23, "Same-variance diagnostic: {1,5} versus uniform 0-6",
+            fontsize=7.5)
+    ax.text(0.01, 0.08, "Optional free-choice transfer remains secondary",
+            fontsize=7.2, color=C["neutral"])
+    ax.set_title("Preregistered measurement sequence")
     panel_label(ax, "D")
 
     return save(fig, "fig7_predictions")
@@ -670,10 +673,11 @@ def figS2_uncertainty_diagram():
 
     use_style()
     d = pd.read_csv(RESULTS / "phase4_uncertainty_diagram.csv")
-    fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.2))
+    fig = plt.figure(figsize=(7.2, 5.1))
+    gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92])
 
     g = d.groupby(["harm_cost", "concentration"]).abs_err_p.mean().unstack()
-    ax = axes[0]
+    ax = fig.add_subplot(gs[0, 0])
     im = ax.pcolormesh(g.columns.values, g.index.values, g.values,
                        cmap="viridis", shading="nearest")
     ax.set_xscale("log"); ax.set_yscale("log")
@@ -684,7 +688,7 @@ def figS2_uncertainty_diagram():
     fig.colorbar(im, ax=ax, pad=0.02)
     panel_label(ax, "A")
 
-    ax = axes[1]
+    ax = fig.add_subplot(gs[0, 1])
     g2 = d.groupby(["harm_cost", "concentration"]).mean_k.mean().unstack()
     im = ax.pcolormesh(g2.columns.values, g2.index.values, g2.values,
                        cmap="magma", shading="nearest")
@@ -695,7 +699,7 @@ def figS2_uncertainty_diagram():
     fig.colorbar(im, ax=ax, pad=0.02)
     panel_label(ax, "B")
 
-    ax = axes[2]
+    ax = fig.add_subplot(gs[1, :])
     agg = d.groupby("concentration").agg(z=("z_p", "mean"), zs=("z_p", "std"),
                                          e=("abs_err_p", "mean"),
                                          es=("abs_err_p", "std"))

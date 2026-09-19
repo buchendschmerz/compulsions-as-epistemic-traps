@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "Compulsions as epistemic traps: Repetition obscures causal control"
+title: "Compulsions as epistemic traps: repetition obscures causal control"
 message: "If you use this code or data, please cite the accompanying manuscript."
 type: software
 authors:
@@ -7,5 +7,8 @@ authors:
     given-names: Dai
     affiliation: "Graduate School of Humanities and Sociology, The University of Tokyo"
     email: dmyzk29@gmail.com
+    orcid: "https://orcid.org/0009-0000-0829-4435"
 date-released: 2026-09-04
 license: MIT
+repository-code: "https://github.com/buchendschmerz/compulsions-as-epistemic-traps"
+url: "https://github.com/buchendschmerz/compulsions-as-epistemic-traps"

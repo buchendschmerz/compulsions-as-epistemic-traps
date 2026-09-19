@@ -28,11 +28,11 @@ epistemic_trap/            library
   grid.py                  grid-based Bayesian posterior over (q, p)
   policies.py              belief → number of repetitions k
   simulate.py              episode generative model, agent runner
-  pomdp.py                 Rigoux et al. (2024) POMDP replication
+  pomdp.py                 developmental Rigoux et al. implementation check
   plotstyle.py             shared publication style
   config.py                seeds, grid resolution, canonical parameters
 
-phase0_replication.py      Rigoux replication            → Fig S1
+phase0_replication.py      developmental implementation check (not submitted)
 phase1_nonidentifiability.py  the theorem + geometry     → Fig 2
 phase2_bayesian_pomdp.py   Bayesian agent, H1–H3         → Fig 3 data
 phase3_interventions.py    8 intervention arms, H4–H5    → Fig 6 data
@@ -50,8 +50,7 @@ figures/                   PDF (for LaTeX) and PNG (for viewing)
 paper/paper_draft.tex      manuscript draft
 paper/references.bib       bibliography (Crossref-audited; see results/)
 docs/deviations.md         where this departs from the original project brief
-The publisher-upload package is prepared separately in the parent project's
-`output/submission/` directory; this release contains code, data and figures.
+The publisher-upload package is maintained separately from this public code-and-data release.
 ```
 
 ## Running everything
@@ -78,8 +77,8 @@ python3 make_numbers.py
 ```
 
 Every script takes `--quick` for a smoke test. All randomness is seeded from
-`epistemic_trap.config.MASTER_SEED`; inference is grid-based, so results are
-bit-reproducible.
+`epistemic_trap.config.MASTER_SEED`; inference is grid-based, so runs are
+deterministic within a fixed software environment.
 
 ## Main results
 
@@ -90,13 +89,12 @@ bit-reproducible.
 | 3 | A repetitive Bayesian agent becomes precise about `λ_k` while learning nothing (or unlearning) about `p`; after 2000 episodes it still believes its actions work half as well as they do | `phase2`, Fig 3 |
 | 4 | Information about one's own efficacy is **exactly zero at k = 0**, peaks at a small interior `k`, and vanishes again at large `k` | `phase2`, Fig 3F |
 | 5 | Response prevention from a naive start moves the efficacy belief by exactly nothing; it works only as the second half of a contrast with earlier repetitive episodes | `phase3` |
-| 6 | Reassurance (checking *after* acting) removes state uncertainty and almost no structural uncertainty; the same check moved *before* acting is strongly diagnostic | `phase3`, Fig 6D |
+| 6 | A post-action state probe removes state uncertainty and almost no structural uncertainty; the same probe moved before acting is strongly diagnostic | `phase3`, Fig 6D |
 | 7 | The trap's second face: the untreated agent resolves the ambiguity the *wrong* way, concludes the world is safe (`E[q]≈0.07` vs a true `0.30`), and under-protects; every condition that probes `q` raises the follow-up repetition rate | `phase3`, Fig 6F |
-| 8 | Behavioural persistence (a truly self-maintaining compulsion) requires uncertainty aversion `κ > 0`; without it the belief stays wrong but the behaviour decays | `phase2 --only-kappa` |
+| 8 | Uncertainty aversion `κ > 0` raises repetition and worsens efficacy learning, but does not sustain repetition over the simulated horizon | `phase2 --only-kappa` |
 | 9 | Residual error is **U-shaped** in the realised repetition count: never acting and always acting are equally blind. The cost of harm decides which kind of blindness you get | `phase4`, Fig 4D |
-| 10 | At matched mean exposure, `Var(k)` predicts posterior precision about `p` — the sharpest human prediction; it survives stratification on severity | `phase5`, Fig 7 |
-| 11 | Uncertainty aversion (`κ>0`) raises repetition and worsens the efficacy belief, but does **not** make the compulsion behaviourally self-sustaining in this model — reported as a null | `phase2 --only-kappa` |
-| 12 | A post-hoc responsibility feedback from recent repetition to subjective harm cost **can** close the behavioural loop, but this works by adding a new psychological assumption rather than by changing the identifiability theorem | `phase6` |
+| 10 | Four randomized schedules can match mean exposure while separating raw variance from expected information; fixed `{3}`, `{2,4}`, `{1,5}`, and uniform `0..6` define the proposed human test | `phase5`, Fig 7 |
+| 11 | A post-hoc responsibility feedback from recent repetition to subjective harm cost **can** close the behavioural loop, but this works by adding a new psychological assumption rather than by changing the identifiability theorem | `phase6` |
 
 Hypothesis verdicts are written to `results/phase2_hypotheses.csv`,
 `results/phase3_hypotheses.csv`, `results/phase5_predictions.csv`, and
@@ -110,7 +108,7 @@ boolean.
 - `results/phase3_trajectories.csv.gz` is the compressed per-episode phase-3
   log. The figure scripts transparently accept either this file or the legacy
   uncompressed `.csv` name.
-- The POMDP replication uses discounted value iteration on a discretised belief
+- The developmental POMDP implementation check uses discounted value iteration on a discretised belief
   interval instead of `pomdp-solve`; `tests/test_pomdp.py` checks the transition,
   observation and reward tables against the published tables and checks
   resolution stability.
@@ -123,11 +121,10 @@ boolean.
 - [x] Crossref audit of the 25 source references completed; decisions are in
       `results/reference_audit_crossref_decisions.md`.
 - [x] Author, affiliation, funding, contribution, competing-interests and AI
-      disclosure statements prepared in the separate manuscript package.
-- [x] PLOS submission DOCX/PDF, cover letter and TIFF figure files prepared
-      outside this code-and-data release.
-- [ ] Add the corresponding author's ORCID and the public repository URL to
-      the manuscript metadata before upload.
+      disclosure statements prepared in the separate submission package.
+- [x] PLOS submission DOCX/PDF, clean bioRxiv PDF, cover letter and TIFF figure
+      files prepared outside this code-and-data release.
+- [x] Corresponding-author ORCID and public repository URL added to the manuscript and cover letter.
 - [ ] Request PLOS fee assistance at submission; no external funding is
       available for the APC.
 

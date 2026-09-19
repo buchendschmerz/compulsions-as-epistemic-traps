@@ -77,12 +77,12 @@ efficacy remains grossly wrong for thousands of episodes. The *behavioural* half
 does not hold for a pure harm minimiser — as its efficacy estimate slowly creeps
 up, its repetition count drifts back down.
 
-Behavioural persistence needs one more ingredient, and the model supplies an
-independently motivated one: **intolerance of uncertainty** (`κ > 0` in the cost
-function), which makes the agent pay for the *variance* of the hazard as well as
-its mean. Then uncertainty buys repetitions, repetitions suppress evidence, and
-the suppressed evidence keeps the uncertainty high. `phase2 --only-kappa` sweeps
-`κ` and shows repetition count rising monotonically and ceasing to decay.
+Adding **intolerance of uncertainty** (`κ > 0` in the cost function) raises the
+action count and worsens efficacy learning, but the stronger persistence claim
+does not survive the full simulated horizon. Repetition still declines. The
+submission manuscript therefore treats this as a clean boundary: the model
+explains persistent causal error, not chronic repetitive behaviour. Any mechanism
+that closes the behavioural loop must be added and tested independently.
 
 ## 5. Hysteresis is real but must be reported carefully
 
@@ -117,15 +117,17 @@ robustness check is the interesting part: a result that depends on the agent
 being unable to represent change in the first place is not a result about
 checking.
 
-## 7. Phase 0 replication is partial, and says so
+## 7. Phase 0 is a developmental implementation check, not a paper result
 
-The direction and significance of the `Δp_SUCCESS` effect replicate. Two things
+The direction and significance of the `Δp_SUCCESS` effect reproduce qualitatively. Two things
 differ from the original: our world-selection criterion favours worlds with
 effective washing, which shifts both groups' `Δp_SUCCESS` negative, and we find
 group differences in cost parameters of comparable or larger effect size than the
 original reported. We attribute this to the solver (grid value iteration rather
-than `pomdp-solve`) and the world sample, and we flag it in the manuscript rather
-than presenting a cleaner replication than we have.
+than `pomdp-solve`) and the world sample. Because this is neither an exact
+replication nor necessary for the structural theorem, its figure and result were
+removed from the submission manuscript. The code, data and figure remain in the
+public repository as transparent developmental validation.
 
 We also exclude agents whose subjectively optimal policy never selects the
 consequential action. For such agents a "compulsive episode" — a run of
@@ -135,7 +137,7 @@ them let a degenerate corner of the cost simplex dominate the comparison.
 ## 8. Mutual review by two tools, replaced by a test suite
 
 The brief specified that Codex and Claude Code review each other's numerics. Only
-one tool was available, so the intent is served by 176 automated tests that check
+one tool was available, so the intent is served by 177 automated tests that check
 the numerically delicate parts against closed forms: the grid posterior against
 analytic Beta–Binomial updates, expected information gain against brute-force
 mutual information, the Fisher information against finite differences, and the
@@ -171,22 +173,19 @@ A policy-induced rank deficiency does not have a characteristic behavioural
 direction — the ridge admits both readings. What it reliably produces is a wrong
 model held with unwarranted confidence.
 
-## 11. Prediction 2 had to be made non-circular
+## 11. Exploratory population analyses were replaced by a randomized test
 
 In the simulated population, decision noise raises both the mean and the variance
-of the action count, so regressing severity on `Var(k)` is partly mechanical. Two
-changes fix it:
+of the action count, so regressing severity on `Var(k)` is partly mechanical. The
+earlier stratified and regression analyses remain in the repository, but they are
+no longer the manuscript's primary human prediction.
 
-- the primary regression now targets the **accuracy** of the efficacy belief,
-  `|E[p] − p*|`, with "where the agent started" as the base model;
-- the headline claim is tested **within strata matched on severity**, where
-  variability still predicts posterior precision (r between −0.25 and −0.29 in
-  every stratum).
-
-We also report a null: raw `Var(k)` adds nothing to the accuracy regression once
-severity is controlled; it is the expected information the realised policy
-generated that carries the effect. Variability matters, but only variability
-*where outcomes still occur*.
+The proposed test now randomizes participants to fixed `{3}`, `{2,4}`, `{1,5}`
+or uniform `0..6`. Every schedule has `E[k]=3`; `{1,5}` and uniform `0..6` also
+share `Var(k)=4`. This design directly separates mean exposure, raw variation and
+the information carried by the support of the schedule. Final efficacy-estimation
+error is primary, and parameter recovery, model-confusion checks and power
+analysis are explicit preregistration gates.
 
 ## 12. Entropy of the observable composite saturates
 

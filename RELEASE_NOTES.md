@@ -12,10 +12,18 @@ file `results/phase3_trajectories.csv.gz` so the release remains below GitHub's
 
 After cloning, verify the publishable files with `shasum -a 256 -c SHA256SUMS`.
 
-Before publication, replace the repository placeholder in `CITATION.cff`,
-publish this directory in a public repository, and archive the release with
-Zenodo or another service that supplies a persistent identifier. The DOI and
-public URL must then be copied into the manuscript's data-and-code statement.
+The public repository is
+`https://github.com/buchendschmerz/compulsions-as-epistemic-traps`, and the
+author's ORCID is recorded in `CITATION.cff`. No archive DOI has been minted;
+none is claimed in the manuscript. If a persistent archive is created later,
+its DOI should be added to both the citation metadata and the manuscript.
+
+The five concise manuscript figures were regenerated for the final DOCX/PDF.
+Figure 4 now displays the same six conditions in every panel using colour,
+marker and line-style redundancy. Figure 5 contains the three pre-specified
+human-data predictions; the post-hoc responsibility-feedback analysis remains
+available as an explicitly exploratory sensitivity analysis and is not used as
+evidence in the main manuscript.
 
 The release should be tested with:
 

@@ -16,8 +16,6 @@ from matplotlib.colors import LogNorm
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-from epistemic_trap.config import result_path
-
 
 ROOT = Path(__file__).resolve().parent
 RESULTS = ROOT / "results"
@@ -59,11 +57,10 @@ def style() -> None:
     })
 
 
-def panel(ax, label: str) -> None:
-    ax.text(0.015, 0.985, label, transform=ax.transAxes, fontsize=10.0,
+def panel(ax, label: str, x: float = -0.12, y: float = 1.08) -> None:
+    ax.text(x, y, label, transform=ax.transAxes, fontsize=10.0,
             fontweight="bold", va="top", ha="left", color=INK, zorder=20,
-            bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5,
-                  "alpha": 0.88})
+            clip_on=False)
 
 
 def finish(fig, stem: str) -> None:
@@ -103,7 +100,7 @@ def figure1_concept() -> None:
         ax.axis("off")
 
     ax = axes[0]
-    panel(ax, "A")
+    panel(ax, "A", x=0.01)
     ax.set_title("Static-belief account", color=INK, pad=8, fontweight="bold")
     box(ax, (0.12, 0.73), 0.76, 0.14,
         "Subjective world model\n(point estimates)", BLUE_LIGHT, BLUE)
@@ -113,12 +110,13 @@ def figure1_concept() -> None:
         "State belief and outcomes", "#F3F5F7", MUTED)
     arrow(ax, (0.5, 0.73), (0.5, 0.57))
     arrow(ax, (0.5, 0.44), (0.5, 0.29))
-    arrow(ax, (0.82, 0.225), (0.82, 0.505), color=MUTED, rad=-0.22)
+    # State belief feeds back to the policy, but contingency beliefs remain fixed.
+    arrow(ax, (0.66, 0.29), (0.66, 0.44), color=MUTED)
     ax.text(0.50, 0.04, "Contingency beliefs do not update",
             ha="center", color=RED, fontsize=8.2, fontweight="bold")
 
     ax = axes[1]
-    panel(ax, "B")
+    panel(ax, "B", x=0.01)
     ax.set_title("Policy-induced epistemic trap", color=INK, pad=8,
                  fontweight="bold")
     box(ax, (0.18, 0.72), 0.64, 0.16,
@@ -183,16 +181,24 @@ def figure2_identifiability() -> None:
         "k in {0,1}",
     ]
     d = policies.set_index("policy").loc[order].copy()
-    values = d.log10_det.replace(-np.inf, -3.0).to_numpy()
-    colors = [RED if singular else BLUE for singular in d.singular]
+    finite = np.isfinite(d.log10_det.to_numpy())
+    singular_x = -2.55
+    values = np.where(finite, d.log10_det.to_numpy(), singular_x)
     y = np.arange(len(d))
-    ax.barh(y, values, color=colors, height=0.64, edgecolor="white")
-    ax.axvline(-3, color=MUTED, ls=":", lw=0.9)
+    ax.axvspan(-2.82, -2.24, color=RED_LIGHT, zorder=0)
+    ax.scatter(values[finite], y[finite], s=38, color=BLUE, marker="o",
+               edgecolor="white", linewidth=0.6, zorder=3)
+    ax.scatter(values[~finite], y[~finite], s=42, color=RED, marker="x",
+               linewidth=1.5, zorder=3)
+    ax.axvline(-2.18, color=GRID, lw=0.9)
     ax.set_yticks(y, [labels[item] for item in order])
     ax.invert_yaxis()
-    ax.set_xlabel("log₁₀ det(Fisher information)")
+    ax.set_xlim(-2.82, 6.15)
+    ax.set_xticks([singular_x, -1, 1, 3, 5],
+                  ["rank 1\n(det = 0)", "-1", "1", "3", "5"])
+    ax.set_xlabel("log₁₀ det information (full-rank designs)")
     ax.set_title("Diversity, not repetition,\nrestores identifiability")
-    ax.text(-2.92, 3.6, "singular", color=RED, fontsize=7.2, va="center")
+    ax.grid(axis="x", color=GRID, lw=0.6, alpha=0.75)
     panel(ax, "B")
 
     ax = fig.add_subplot(gs[0, 2])
@@ -238,7 +244,7 @@ def figure3_learning() -> None:
     ax.set(xlabel="Episode", ylabel="Mean efficacy belief, E[p | D]",
            title="Belief in personal efficacy")
     ax.legend(frameon=False, loc="lower right")
-    panel(ax, "A")
+    panel(ax, "A", x=0.01, y=1.22)
 
     ax = fig.add_subplot(gs[0, 1])
     trajectory_band(ax, traj, "severe_doubt/fixed-k", "mean_q", RED,
@@ -248,7 +254,7 @@ def figure3_learning() -> None:
     ax.axhline(0.30, color=INK, ls=":", lw=1.0)
     ax.set(xlabel="Episode", ylabel="Mean hazard belief, E[q | D]",
            title="Belief about baseline hazard")
-    panel(ax, "B")
+    panel(ax, "B", x=0.01, y=1.22)
 
     extent = [0, 1, 0, 1]
     for index, (key, title, label) in enumerate([
@@ -263,7 +269,7 @@ def figure3_learning() -> None:
                    edgecolor=INK, linewidth=0.6, zorder=5)
         ax.set(xlabel="Preventive efficacy, p", ylabel="Baseline hazard, q",
                title=title, xlim=(0, 1), ylim=(0, 1))
-        panel(ax, label)
+        panel(ax, label, x=0.01, y=1.22)
 
     fig.subplots_adjust(left=0.09, right=0.98, bottom=0.10, top=0.91)
     finish(fig, "figure_3_learning")
@@ -271,7 +277,7 @@ def figure3_learning() -> None:
 
 def figure4_interventions() -> None:
     style()
-    traj = pd.read_csv(result_path("phase3_trajectories.csv"))
+    traj = pd.read_csv(RESULTS / "phase3_trajectories.csv")
     summary = pd.read_csv(RESULTS / "phase3_summary.csv")
     fig = plt.figure(figsize=(7.1, 5.25))
     gs = fig.add_gridspec(2, 2, hspace=0.88, wspace=0.43)
@@ -287,37 +293,55 @@ def figure4_interventions() -> None:
     }
     labels = {
         "locked_k": "Locked k",
-        "reassurance": "Check after acting",
-        "baseline_check": "Check before acting",
+        "reassurance": "Post-action probe",
+        "baseline_check": "Pre-action probe",
         "erp_k0": "Response prevention",
         "graded_erp": "Graded ERP",
         "variable_k": "Variable-k policy",
     }
+    conditions = list(colors)
+    markers = {
+        "locked_k": "o",
+        "reassurance": "s",
+        "baseline_check": "^",
+        "erp_k0": "D",
+        "graded_erp": "P",
+        "variable_k": "X",
+    }
+    linestyles = {
+        "locked_k": "-",
+        "reassurance": "--",
+        "baseline_check": "-.",
+        "erp_k0": ":",
+        "graded_erp": (0, (3, 1, 1, 1)),
+        "variable_k": (0, (6, 2)),
+    }
 
     ax = fig.add_subplot(gs[0, 0])
-    for condition in ["locked_k", "reassurance", "graded_erp", "variable_k"]:
+    for condition in conditions:
         d = traj[traj.condition == condition]
         g = d.groupby("episode").mean_p.mean()
-        ax.plot(g.index, g.values, lw=1.45, color=colors[condition], label=labels[condition])
+        ax.plot(g.index, g.values, lw=1.55, color=colors[condition],
+                linestyle=linestyles[condition], label=labels[condition])
     ax.axvspan(400, 1000, color="#EEF1F3", zorder=-1)
     ax.axhline(0.80, color=INK, ls=":", lw=0.9)
     ax.set(xlabel="Episode", ylabel="Mean efficacy belief, E[p | D]",
            title="Efficacy belief during intervention")
-    panel(ax, "A")
+    panel(ax, "A", x=-0.06)
 
     means = summary.groupby(["condition", "block"]).mean(numeric_only=True)
-    conditions = list(colors)
     ax = fig.add_subplot(gs[0, 1])
     for condition in conditions:
         pre = means.loc[(condition, "pre")]
         tx = means.loc[(condition, "tx")]
         gain = tx.logdens_true - pre.logdens_true
-        ax.scatter(tx.harm_rate, gain, s=46, color=colors[condition],
-                   edgecolor="white", linewidth=0.7, zorder=3)
+        ax.scatter(tx.harm_rate, gain, s=52, color=colors[condition],
+                   marker=markers[condition], edgecolor=INK, linewidth=0.55,
+                   zorder=3)
     ax.set(xlabel="Harm rate during treatment",
            ylabel="Knowledge gain at truth",
-           title="Knowledge gained versus harm experienced")
-    panel(ax, "B")
+           title="Knowledge gain versus harm")
+    panel(ax, "B", x=-0.06)
 
     ax = fig.add_subplot(gs[1, 0])
     for condition in conditions:
@@ -325,20 +349,21 @@ def figure4_interventions() -> None:
         tx = means.loc[(condition, "tx")]
         gain = tx.logdens_true - pre.logdens_true
         state = tx.d_H_state
-        ax.scatter(state, gain, s=46, color=colors[condition],
-                   edgecolor="white", linewidth=0.7, zorder=3)
+        ax.scatter(state, gain, s=52, color=colors[condition],
+                   marker=markers[condition], edgecolor=INK, linewidth=0.55,
+                   zorder=3)
     ax.axvline(0, color=GRID, lw=0.9)
     ax.set(xlabel="State uncertainty removed (nats)",
            ylabel="Gain in structural knowledge",
-           title="State uncertainty versus structural knowledge")
+           title="State versus structural learning")
     reass = means.loc[("reassurance", "tx")]
     reass_pre = means.loc[("reassurance", "pre")]
-    ax.annotate("Check after acting", (reass.d_H_state,
+    ax.annotate("Post-action probe", (reass.d_H_state,
                 reass.logdens_true - reass_pre.logdens_true),
                 xytext=(-72, 10), textcoords="offset points",
                 arrowprops={"arrowstyle": "->", "color": colors["reassurance"]},
                 fontsize=6.8, color=colors["reassurance"])
-    panel(ax, "C")
+    panel(ax, "C", x=-0.06)
 
     ax = fig.add_subplot(gs[1, 1])
     change = []
@@ -353,10 +378,13 @@ def figure4_interventions() -> None:
     ax.invert_yaxis()
     ax.set(xlabel="Change in repetitions at follow-up",
            title="Change in repetitions at follow-up")
-    panel(ax, "D")
+    panel(ax, "D", x=-0.06)
 
     handles = [
-        Line2D([0], [0], color=colors[condition], lw=2.2, label=labels[condition])
+        Line2D([0], [0], color=colors[condition], lw=1.8,
+               linestyle=linestyles[condition], marker=markers[condition],
+               markeredgecolor=INK, markeredgewidth=0.45, markersize=5,
+               label=labels[condition])
         for condition in conditions
     ]
     fig.legend(handles=handles, ncol=3, loc="lower center",
@@ -369,83 +397,96 @@ def figure4_interventions() -> None:
 def figure5_predictions() -> None:
     style()
     vm = pd.read_csv(RESULTS / "phase5_variance_matched.csv")
-    pop = pd.read_csv(RESULTS / "phase5_population.csv")
-    reg = pd.read_csv(RESULTS / "phase5_regression.csv")
-    resp = pd.read_csv(RESULTS / "phase6_responsibility_summary.csv")
-    fig = plt.figure(figsize=(7.1, 5.05))
-    gs = fig.add_gridspec(2, 2, hspace=0.72, wspace=0.40)
+    order = ["fixed {3}", "{2,4}", "{1,5}", "uniform 0..6"]
+    display = ["Fixed {3}", "{2,4}", "{1,5}", "Uniform 0-6"]
+    variances = [0, 1, 4, 4]
+    colors = ["#4D4D4D", "#0072B2", "#D55E00", "#009E73"]
+    schedules = np.zeros((4, 7))
+    schedules[0, 3] = 1.0
+    schedules[1, [2, 4]] = 0.5
+    schedules[2, [1, 5]] = 0.5
+    schedules[3, :] = 1 / 7
+
+    fig = plt.figure(figsize=(7.1, 5.15))
+    gs = fig.add_gridspec(2, 2, hspace=0.88, wspace=0.48)
 
     ax = fig.add_subplot(gs[0, 0])
-    g = vm.groupby(["design", "var_k"]).sd_p.agg(["mean", "std"]).reset_index().sort_values("var_k")
-    ax.errorbar(g.var_k, g["mean"], yerr=g["std"], fmt="o", color=BLUE,
-                ecolor=BLUE, capsize=3, ms=5)
-    label_offsets = {
-        "fixed {3}": (7, -16),
-        "{2,4}": (7, 7),
-        "{1,5}": (7, 7),
-        "uniform 0..6": (7, -16),
-        "{0,6}": (7, 7),
-    }
-    for _, row in g.iterrows():
-        ax.annotate(
-            row.design,
-            (row.var_k, row["mean"]),
-            xytext=label_offsets.get(row.design, (7, 7)),
-            textcoords="offset points",
-            fontsize=6.6,
-        )
-    ax.set(xlabel="Variance of repetition count, Var(k)",
-           ylabel="Posterior SD of efficacy",
-           title="Matched exposure: policy variance and precision")
+    ax.imshow(schedules, cmap="Blues", vmin=0, vmax=1, aspect="auto")
+    for row in range(schedules.shape[0]):
+        for col in range(schedules.shape[1]):
+            value = schedules[row, col]
+            if value > 0:
+                label = "1" if value == 1 else ("1/2" if value == 0.5 else "1/7")
+                ax.text(col, row, label, ha="center", va="center",
+                        fontsize=7.0, color="white" if value >= 0.5 else INK,
+                        fontweight="bold")
+    ax.set_xticks(np.arange(7))
+    ax.set_yticks(np.arange(4),
+                  [f"{name}  (Var={variance})"
+                   for name, variance in zip(display, variances)])
+    ax.set(xlabel="Assigned action count, k",
+           title="Four schedules with E[k] = 3")
+    ax.tick_params(length=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     panel(ax, "A")
 
+    grouped = vm[vm.design.isin(order)].groupby("design")
+    means_sd = grouped.sd_p.mean().reindex(order)
+    errors_sd = grouped.sd_p.std().reindex(order)
+    means_err = grouped.abs_err_p.mean().reindex(order)
+    errors_err = grouped.abs_err_p.std().reindex(order)
+    y = np.arange(4)
+
     ax = fig.add_subplot(gs[0, 1])
-    strata = pd.qcut(pop.severity, 3, labels=["Low", "Mid", "High"])
-    for label, color, marker in zip(["Low", "Mid", "High"], [BLUE, PURPLE, GOLD], ["o", "s", "^"]):
-        d = pop[strata == label]
-        ax.scatter(d.var_k, d.sd_p, s=12, alpha=0.35, color=color, marker=marker,
-                   edgecolor="none")
-        slope, intercept = np.polyfit(d.var_k, d.sd_p, 1)
-        xs = np.linspace(d.var_k.min(), d.var_k.max(), 30)
-        corr = np.corrcoef(d.var_k, d.sd_p)[0, 1]
-        ax.plot(xs, intercept + slope * xs, color=color, lw=1.5,
-                label=f"{label} severity, r = {corr:.2f}")
-    ax.set(xlabel="Behavioural variability, Var(k)", ylabel="Posterior SD of efficacy",
-           title="Policy variance within severity strata")
-    ax.legend(frameon=False, loc="upper right")
+    for i in range(4):
+        ax.errorbar(means_sd.iloc[i], i, xerr=errors_sd.iloc[i], fmt="o",
+                    color=colors[i], ecolor=colors[i], capsize=3, ms=5.5,
+                    markeredgecolor=INK, markeredgewidth=0.4, zorder=3)
+    ax.set_yticks(y, display)
+    ax.invert_yaxis()
+    ax.set(xlabel="Posterior SD of efficacy, p",
+           title="Uncertainty after matched exposure")
+    ax.grid(axis="x", color=GRID, lw=0.6, alpha=0.8)
     panel(ax, "B")
 
     ax = fig.add_subplot(gs[1, 0])
-    labels = ["Initial belief", "+ severity", "+ Var(k)", "+ policy information"]
-    bars = ax.bar(np.arange(len(reg)), reg.adj_r2, color=[MUTED, GOLD, PURPLE, BLUE], width=0.66)
-    ax.set_xticks(np.arange(len(reg)), labels, rotation=16, ha="right")
-    ax.set_ylim(0, 0.72)
-    ax.set_ylabel("Adjusted R²")
-    ax.set_title("Nested prediction of final efficacy error")
-    for bar, value in zip(bars, reg.adj_r2):
-        ax.text(bar.get_x() + bar.get_width()/2, value + 0.015, f"{value:.2f}",
-                ha="center", fontsize=7.2)
+    for i in range(4):
+        ax.errorbar(means_err.iloc[i], i, xerr=errors_err.iloc[i], fmt="o",
+                    color=colors[i], ecolor=colors[i], capsize=3, ms=5.5,
+                    markeredgecolor=INK, markeredgewidth=0.4, zorder=3)
+    ax.set_yticks(y, display)
+    ax.invert_yaxis()
+    ax.set(xlabel="Absolute error in final efficacy estimate",
+           title="Primary simulated outcome")
+    ax.grid(axis="x", color=GRID, lw=0.6, alpha=0.8)
     panel(ax, "C")
 
     ax = fig.add_subplot(gs[1, 1])
-    ax.plot(resp.strength, resp.persistence, "o-", color=RED, lw=1.8, ms=5)
-    ax.axhline(0.80, color=INK, ls="--", lw=0.9)
-    ax.fill_between(resp.strength, 0.80, 1.02, color=RED_LIGHT, alpha=0.7)
-    closed = resp[resp.behavioural_closure.astype(bool)]
-    if not closed.empty:
-        row = closed.iloc[0]
-        ax.annotate(f"Loop closes at α = {row.strength:g}",
-                    (row.strength, row.persistence), xytext=(-86, -43),
-                    textcoords="offset points", arrowprops={"arrowstyle": "->", "color": RED},
-                    fontsize=7.2, color=RED,
-                    bbox={"facecolor": "white", "edgecolor": "none",
-                          "alpha": 0.92, "pad": 1.2})
-    ax.set(xlabel="Responsibility-feedback strength, α",
-           ylabel="Late / early repetition ratio", ylim=(0.25, 1.03),
-           title="Responsibility feedback and behavioural persistence")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    box(ax, (0.02, 0.61), 0.26, 0.22, "Randomize\nschedule", BLUE_LIGHT, BLUE,
+        fontsize=7.5)
+    box(ax, (0.37, 0.61), 0.26, 0.22, "Estimate q, p,\nand confidence\nafter each block",
+        "#E4F2EE", TEAL, fontsize=7.2)
+    box(ax, (0.72, 0.61), 0.26, 0.22, "Final efficacy\nerror\n(primary)", RED_LIGHT, RED,
+        fontsize=7.4)
+    arrow(ax, (0.28, 0.72), (0.37, 0.72), color=INK)
+    arrow(ax, (0.63, 0.72), (0.72, 0.72), color=INK)
+    ax.text(0.02, 0.39, "Primary contrast", fontsize=7.0, color=MUTED,
+            fontweight="bold")
+    ax.text(0.02, 0.29, "Fixed {3} vs informative schedules",
+            fontsize=7.4, color=INK)
+    ax.text(0.02, 0.17, "Same-variance diagnostic", fontsize=7.0,
+            color=MUTED, fontweight="bold")
+    ax.text(0.02, 0.09, "{1,5} vs uniform 0-6", fontsize=6.8, color=INK)
+    ax.text(0.02, 0.01, "Optional free-choice transfer is secondary",
+            fontsize=6.5, color=MUTED)
+    ax.set_title("Preregistered measurement sequence")
     panel(ax, "D")
 
-    fig.subplots_adjust(left=0.10, right=0.98, bottom=0.12, top=0.91)
+    fig.subplots_adjust(left=0.13, right=0.98, bottom=0.09, top=0.92)
     finish(fig, "figure_5_predictions_boundary")
 
 
