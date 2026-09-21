@@ -14,7 +14,6 @@ import time
 
 FULL = [
     (["-m", "pytest", "tests/", "-q"], []),
-    (["phase0_replication.py"], ["--n-worlds", "60", "--n-per-group", "60"]),
     (["phase1_nonidentifiability.py"], []),
     (["phase2_bayesian_pomdp.py"], ["--n-agents", "20", "--n-episodes", "2000",
                                     "--log-every", "10"]),
@@ -24,11 +23,9 @@ FULL = [
     (["phase4_hysteresis_phasediagram.py"], ["--n-agents", "16", "--sweep-n", "11",
                                              "--sweep-seeds", "3",
                                              "--parts", "A,A2,B,C,D"]),
-    (["phase5_predictions.py"], ["--n-individuals", "300"]),
-    (["phase6_responsibility_feedback.py"], ["--n-agents", "8",
-                                             "--n-episodes", "1000",
-                                             "--log-every", "20"]),
-    (["make_figures.py"], []),
+    (["phase5_predictions.py"], []),
+    (["make_figures.py"], ["4", "5", "8"]),
+    (["make_submission_figures.py"], []),
     (["make_numbers.py"], []),
 ]
 
@@ -40,8 +37,13 @@ def main():
 
     t0 = time.time()
     for script, extra in FULL:
-        cmd = [sys.executable] + script + ([] if script[0] == "-m" else
-                                           (["--quick"] if args.quick else extra))
+        if script[0] == "-m":
+            arguments = []
+        elif args.quick:
+            arguments = [] if script[0].startswith("make_") else ["--quick"]
+        else:
+            arguments = extra
+        cmd = [sys.executable] + script + arguments
         print(f"\n{'=' * 72}\n$ {' '.join(cmd)}\n{'=' * 72}", flush=True)
         r = subprocess.run(cmd, check=False)
         if r.returncode != 0:

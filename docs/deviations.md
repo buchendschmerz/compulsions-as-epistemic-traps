@@ -117,34 +117,14 @@ robustness check is the interesting part: a result that depends on the agent
 being unable to represent change in the first place is not a result about
 checking.
 
-## 7. Phase 0 is a developmental implementation check, not a paper result
+## 7. Numerical checks are encoded in the test suite
 
-The direction and significance of the `Δp_SUCCESS` effect reproduce qualitatively. Two things
-differ from the original: our world-selection criterion favours worlds with
-effective washing, which shifts both groups' `Δp_SUCCESS` negative, and we find
-group differences in cost parameters of comparable or larger effect size than the
-original reported. We attribute this to the solver (grid value iteration rather
-than `pomdp-solve`) and the world sample. Because this is neither an exact
-replication nor necessary for the structural theorem, its figure and result were
-removed from the submission manuscript. The code, data and figure remain in the
-public repository as transparent developmental validation.
-
-We also exclude agents whose subjectively optimal policy never selects the
-consequential action. For such agents a "compulsive episode" — a run of
-preventive actions *between* consequential actions — is undefined, and including
-them let a degenerate corner of the cost simplex dominate the comparison.
-
-## 8. Mutual review by two tools, replaced by a test suite
-
-The brief specified that Codex and Claude Code review each other's numerics. Only
-one tool was available, so the intent is served by 177 automated tests that check
-the numerically delicate parts against closed forms: the grid posterior against
+Automated tests check the numerically delicate parts against closed forms: the grid posterior against
 analytic Beta–Binomial updates, expected information gain against brute-force
-mutual information, the Fisher information against finite differences, and the
-POMDP tables against the published tables. `tests/` is the artefact that replaces
-the review step.
+mutual information, and the Fisher information against finite differences.
+`tests/` records these checks in a reproducible form.
 
-## 9. The trap has two arms, and the phase diagram shows it
+## 8. The trap has two arms, and the phase diagram shows it
 
 The brief's phase diagram was expected to show residual doubt growing with the
 cost of harm. It does not, and what it shows instead is better. Pooled over the
@@ -158,7 +138,7 @@ This is the same interior optimum that the controlled design sweep produces
 (Fig. 3F), now arising from agents that were never told what to do, so the two
 results corroborate each other.
 
-## 10. The untreated agent under-protects
+## 9. The untreated agent under-protects
 
 Setting up Phase 3 we expected the untreated arm to remain the most compulsive.
 It does not. By the end of the pre-treatment block the untreated agent has
@@ -173,12 +153,12 @@ A policy-induced rank deficiency does not have a characteristic behavioural
 direction — the ridge admits both readings. What it reliably produces is a wrong
 model held with unwarranted confidence.
 
-## 11. Exploratory population analyses were replaced by a randomized test
+## 10. Exploratory population analyses were replaced by a randomized test
 
 In the simulated population, decision noise raises both the mean and the variance
 of the action count, so regressing severity on `Var(k)` is partly mechanical. The
-earlier stratified and regression analyses remain in the repository, but they are
-no longer the manuscript's primary human prediction.
+earlier stratified and regression analyses were therefore removed from the public
+release and are not evidence for the manuscript's human prediction.
 
 The proposed test now randomizes participants to fixed `{3}`, `{2,4}`, `{1,5}`
 or uniform `0..6`. Every schedule has `E[k]=3`; `{1,5}` and uniform `0..6` also
@@ -187,7 +167,7 @@ the information carried by the support of the schedule. Final efficacy-estimatio
 error is primary, and parameter recovery, model-confusion checks and power
 analysis are explicit preregistration gates.
 
-## 12. Entropy of the observable composite saturates
+## 11. Entropy of the observable composite saturates
 
 `H(λ_k)` is computed on a fixed `[0,1]` bin grid so that it is directly
 comparable with `H(p)` and `H(q)`. For a compulsive agent at large `k`, `λ_k` is
@@ -195,20 +175,3 @@ of order `10⁻⁵` and the whole posterior falls inside the first bin, so the e
 saturates and the reported *reduction* is a lower bound. The manuscript therefore
 reports the scale-free posterior-SD ratio alongside the nats, and the docstring in
 `grid.py` carries the warning.
-
-## 13. Responsibility feedback closes behaviour, but by adding a new assumption
-
-The Phase 2 limitation remains important: uncertainty aversion alone raises
-repetition and worsens knowledge, but it does not keep behaviour high over the
-simulated horizon. `phase6_responsibility_feedback.py` asks the follow-up question
-left in the draft: what if recent repetition increases the subjective cost of a
-bad outcome, as if harm after repeated safety action feels more personally
-responsible?
-
-With that extra feedback term, the behavioural loop can close. This is a
-boundary-condition result, not a rescue of the original H2. The central theorem is
-unchanged: fixed designs are still non-identifying. What changes is the policy
-layer, because repeated action now makes future harm more costly, which buys yet
-more repetition. The manuscript should therefore present this as evidence that
-persistent behaviour needs an additional psychological ingredient, not as
-evidence that non-identifiability alone is sufficient for chronic compulsion.

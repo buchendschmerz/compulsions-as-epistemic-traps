@@ -1,6 +1,0 @@
-prediction,statement,metric,value,supported
-P1,"At matched mean exposure, posterior precision about efficacy rises with the variance of the exposure","corr(Var(k), SD[p|D]) across matched designs",-0.8101501566676951,True
-P1b,The matched fixed-k design is the only singular one,fraction singular: fixed vs varied designs,1.0,True
-P2,"Policy-induced information explains how accurate a person's efficacy belief becomes, beyond where they started",delta adj-R2 from adding Var(k) and policy EIG (target: |E[p]-p*|),0.1482084573604927,True
-P2b,"Non-circular form: WITHIN strata matched on severity, individuals whose behaviour varies more hold more precise beliefs about their own efficacy","corr(Var(k), SD[p|D]) within every severity stratum",-0.25398241214817774,True
-P2c,"Unstratified, variability also tracks precision, but this is partly mechanical","corr(Var(k), SD[p|D]) in the whole population",-0.19017966539681216,True

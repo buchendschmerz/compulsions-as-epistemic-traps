@@ -25,38 +25,9 @@ def have(name):
     return (RESULTS / name).exists()
 
 
-def fmt_p(p):
-    if p is None or not np.isfinite(p):
-        return "n/a"
-    return r"< 10^{-3}" if p < 1e-3 else f"= {p:.3f}"
-
-
 # ------------------------------------------------------------------ world
 put("worldQ", WORLD["q"], "{:.2f}")
 put("worldP", WORLD["p"], "{:.2f}")
-
-# ------------------------------------------------------------------ phase 0
-if have("phase0_group_stats.csv") and have("phase0_agents.csv"):
-    s = pd.read_csv(RESULTS / "phase0_group_stats.csv").set_index("param")
-    a = pd.read_csv(RESULTS / "phase0_agents.csv")
-    put("repNagents", len(a), "{:d}")
-    put("repNworlds", int(a.world.nunique()), "{:d}")
-    put("repDeltaPsuccessComp", s.loc["p_success", "mean_compulsive"], "{:.3f}")
-    put("repDeltaPsuccessNon", s.loc["p_success", "mean_noncompulsive"], "{:.3f}")
-    put("repDsuccess", s.loc["p_success", "cohens_d"], "{:.2f}")
-    put("repPsuccessP", fmt_p(s.loc["p_success", "boot_p"]))
-    put("repDsick", s.loc["c_sick", "cohens_d"], "{:.2f}")
-    put("repDcheck", s.loc["c_check", "cohens_d"], "{:.2f}")
-    put("repDdetectDirty", s.loc["d_dirty", "cohens_d"], "{:.2f}")
-    if have("phase0_severity_stats.csv"):
-        sv = pd.read_csv(RESULTS / "phase0_severity_stats.csv").set_index("measure")
-        put("repRhoMaxLen", sv.loc["max_len", "spearman_rho"], "{:.2f}")
-        put("repRhoMeanLen", sv.loc["mean_len", "spearman_rho"], "{:.2f}")
-        put("repRhoFracNoncook", sv.loc["frac_noncook", "spearman_rho"], "{:.2f}")
-        put("repRhoWithinWorld", sv.loc["max_len", "within_world_r"], "{:.2f}")
-        put("repRhoNepisodes", sv.loc["n_comp_episodes", "spearman_rho"], "{:.2f}")
-    put("repWorldPsuccess",
-        float(pd.read_csv(RESULTS / "phase0_worlds.csv").p_success.mean()), "{:.2f}")
 
 # ------------------------------------------------------------------ phase 1
 if have("phase1_policy_identifiability.csv"):
@@ -134,24 +105,6 @@ if have("phase2_kappa_means.csv") and "persistence" in pd.read_csv(
     put("kappaZeroLateK", kp.loc[kp.kappa == 0, "k_late"].iloc[0], "{:.1f}")
     put("kappaMaxLateK", kp.loc[kp.kappa == kp.kappa.max(), "k_late"].iloc[0],
         "{:.1f}")
-
-# ------------------------------------------------------------------ phase 6
-if have("phase6_responsibility_summary.csv"):
-    rf = pd.read_csv(RESULTS / "phase6_responsibility_summary.csv")
-    base = rf.loc[rf.strength == rf.strength.min()].iloc[0]
-    closed = rf[rf.behavioural_closure]
-    best = (closed.sort_values("strength").iloc[0]
-            if len(closed)
-            else rf.sort_values("persistence", ascending=False).iloc[0])
-    put("respBaseStrength", base.strength, "{:.0f}")
-    put("respBasePersistence", base.persistence, "{:.2f}")
-    put("respBaseLateK", base.k_late, "{:.2f}")
-    put("respClosedStrength", best.strength, "{:.0f}")
-    put("respClosedPersistence", best.persistence, "{:.2f}")
-    put("respClosedLateK", best.k_late, "{:.2f}")
-    put("respClosedErrP", best.abs_err_p, "{:.2f}")
-    put("respClosedHarm", 100 * best.harm_rate, "{:.1f}")
-    put("respClosed", "yes" if bool(best.behavioural_closure) else "no")
 
 # ------------------------------------------------------------------ phase 3
 if have("phase3_hypotheses.csv") and have("phase3_blocks.csv"):
@@ -283,10 +236,8 @@ if have("phase4_uncertainty_diagram.csv"):
         float(np.corrcoef(np.log(ud.concentration), ud.mean_k)[0, 1]), "{:.2f}")
 
 # ------------------------------------------------------------------ phase 5
-if have("phase5_variance_matched_means.csv") and have("phase5_regression.csv"):
+if have("phase5_variance_matched_means.csv"):
     vm = pd.read_csv(RESULTS / "phase5_variance_matched_means.csv")
-    reg = pd.read_csv(RESULTS / "phase5_regression.csv")
-    pred = pd.read_csv(RESULTS / "phase5_predictions.csv").set_index("prediction")
     fixed = vm[vm.var_k == 0].iloc[0]
     best = vm.loc[vm.sd_p.idxmin()]
     put("vmFixedSdP", fixed.sd_p, "{:.3f}")
@@ -296,26 +247,9 @@ if have("phase5_variance_matched_means.csv") and have("phase5_regression.csv"):
     put("vmSdRatio", fixed.sd_p / best.sd_p, "{:.1f}")
     put("vmFixedHarm", 100 * fixed.harm_rate, "{:.1f}")
     put("vmBestHarm", 100 * best.harm_rate, "{:.1f}")
-    put("vmCorr", pred.loc["P1", "value"], "{:.2f}")
-    put("regBaseR", reg.adj_r2.iloc[0], "{:.2f}")
-    put("regFullR", reg.adj_r2.iloc[-1], "{:.2f}")
-    put("regVarKP", fmt_p(reg.p_vs_previous.iloc[2]))
-    put("regEigP", fmt_p(reg.p_vs_previous.iloc[3]))
-    put("popN", len(pd.read_csv(RESULTS / "phase5_population.csv")), "{:d}")
-    if have("phase5_stratified.csv"):
-        st = pd.read_csv(RESULTS / "phase5_stratified.csv")
-        put("stratCorrMin", st.corr_vark_sdp.min(), "{:.2f}")
-        put("stratCorrMax", st.corr_vark_sdp.max(), "{:.2f}")
-        put("stratN", int(st.n.iloc[0]), "{:d}")
-        put("stratLevels", len(st), "{:d}")
-    if have("phase5_severity_regression.csv"):
-        sr = pd.read_csv(RESULTS / "phase5_severity_regression.csv")
-        put("sevRegBase", sr.adj_r2.iloc[0], "{:.3f}")
-        put("sevRegCost", sr.adj_r2.iloc[1], "{:.2f}")
-        put("sevRegSdP", sr.adj_r2.iloc[2], "{:.2f}")
-        put("sevRegFull", sr.adj_r2.iloc[-1], "{:.2f}")
-        put("sevRegSdPP", fmt_p(sr.p_vs_previous.iloc[2]))
-        put("sevRegEigP", fmt_p(sr.p_vs_previous.iloc[3]))
+    if have("phase5_variance_matched.csv"):
+        raw = pd.read_csv(RESULTS / "phase5_variance_matched.csv")
+        put("vmCorr", float(np.corrcoef(raw.var_k, raw.sd_p)[0, 1]), "{:.2f}")
 
 # ------------------------------------------------------------------ write
 lines = ["% Auto-generated by make_numbers.py -- do not edit by hand.",
@@ -324,9 +258,9 @@ for k, v in sorted(MACROS.items()):
     lines.append(rf"\newcommand{{\{k}}}{{{v}}}")
 OUT.write_text("\n".join(lines) + "\n")
 print(f"wrote {len(MACROS)} macros to {OUT}")
-missing = [n for n in ("phase0_group_stats.csv", "phase1_policy_identifiability.csv",
+missing = [n for n in ("phase1_policy_identifiability.csv",
                        "phase2_condition_means.csv", "phase3_hypotheses.csv",
-                       "phase4_loop_areas.csv", "phase5_regression.csv")
+                       "phase4_loop_areas.csv", "phase5_variance_matched_means.csv")
            if not have(n)]
 if missing:
     print(f"  (not yet available: {missing})")

@@ -171,8 +171,6 @@ def run_agent(world, spec, n_episodes, seed, log_every=1, k_ref_mode="modal",
                        H_state_pre=float(binary_entropy(b_pre)),
                        H_state_commit=float(binary_entropy(b_commit)),
                        p_hazard_commit=float(b_commit))
-            if hasattr(spec.policy, "responsibility"):
-                row["responsibility"] = float(spec.policy.responsibility)
             row.update(grid.summary(k_ref=k_ref, truth=(world.q, world.p)))
             row["err_p"] = row["mean_p"] - world.p
             row["err_q"] = row["mean_q"] - world.q

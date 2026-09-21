@@ -35,6 +35,16 @@ PURPLE = "#6C5B9D"
 BG = "#FFFFFF"
 
 
+def read_result_csv(name: str, **kwargs) -> pd.DataFrame:
+    """Read a result table, accepting the release's deterministic gzip form."""
+    path = RESULTS / name
+    if not path.exists() and path.suffix == ".csv":
+        compressed = path.with_suffix(".csv.gz")
+        if compressed.exists():
+            path = compressed
+    return pd.read_csv(path, **kwargs)
+
+
 def style() -> None:
     plt.rcParams.update({
         "font.family": "DejaVu Sans",
@@ -130,7 +140,7 @@ def figure1_concept() -> None:
         "Bayesian update", "#E4F2EE", TEAL)
     arrow(ax, (0.72, 0.74), (0.79, 0.56), color=RED)
     arrow(ax, (0.79, 0.43), (0.66, 0.27), color=RED)
-    arrow(ax, (0.36, 0.21), (0.20, 0.43), color=TEAL)
+    arrow(ax, (0.36, 0.27), (0.20, 0.43), color=TEAL)
     arrow(ax, (0.20, 0.56), (0.30, 0.74), color=BLUE)
     ax.text(0.50, 0.04,
             "If k never varies, q and p cannot be separated",
@@ -144,10 +154,11 @@ def figure1_concept() -> None:
 
 def figure2_identifiability() -> None:
     style()
-    fig = plt.figure(figsize=(7.1, 3.05))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.15, 1.0], wspace=0.46)
+    fig = plt.figure(figsize=(7.1, 3.25))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.25, 1.04], wspace=0.58)
 
     ax = fig.add_subplot(gs[0, 0])
+    ax_a = ax
     p = np.linspace(0.01, 0.93, 240)
     q_true, p_true = 0.30, 0.80
     for k, color in zip([1, 2, 4, 6], [PURPLE, BLUE, TEAL, GOLD]):
@@ -159,20 +170,21 @@ def figure2_identifiability() -> None:
                edgecolor=INK, linewidth=0.6, zorder=5)
     ax.set(xlim=(0, 0.95), ylim=(0, 1), xlabel="Preventive efficacy, p",
            ylabel="Baseline hazard, q", title="One repetition count gives\none likelihood ridge")
-    ax.legend(frameon=False, ncol=2, loc="upper left")
-    panel(ax, "A")
+    ax.legend(frameon=True, facecolor=BG, edgecolor="none", framealpha=0.96,
+              borderpad=0.25, ncol=2, loc="upper left")
 
     ax = fig.add_subplot(gs[0, 1])
+    ax_b = ax
     policies = pd.read_csv(RESULTS / "phase1_policy_identifiability.csv")
     labels = {
-        "fixed k=0 (pure response prevention)": "Fixed k = 0",
-        "fixed k=1": "Fixed k = 1",
-        "fixed k=3": "Fixed k = 3",
-        "fixed k=6 (compulsive)": "Fixed k = 6",
-        "compulsive, jittered (k in {5,6,7})": "Jittered {5,6,7}",
-        "k in {0,6} (baseline + compulsive)": "Contrast {0,6}",
-        "graded ERP (k in 0..6)": "Graded 0...6",
-        "k in {0,1}": "Contrast {0,1}",
+        "fixed k=0 (pure response prevention)": "Fixed: k=0",
+        "fixed k=1": "Fixed: k=1",
+        "fixed k=3": "Fixed: k=3",
+        "fixed k=6 (compulsive)": "Fixed: k=6",
+        "compulsive, jittered (k in {5,6,7})": "Jittered: 5-7",
+        "k in {0,6} (baseline + compulsive)": "Contrast: {0,6}",
+        "graded ERP (k in 0..6)": "Graded: 0-6",
+        "k in {0,1}": "Contrast: {0,1}",
     }
     order = [
         "fixed k=0 (pure response prevention)", "fixed k=1", "fixed k=3",
@@ -198,10 +210,11 @@ def figure2_identifiability() -> None:
                   ["rank 1\n(det = 0)", "-1", "1", "3", "5"])
     ax.set_xlabel("log₁₀ det information (full-rank designs)")
     ax.set_title("Diversity, not repetition,\nrestores identifiability")
+    ax.tick_params(axis="y", labelsize=6.8, pad=3)
     ax.grid(axis="x", color=GRID, lw=0.6, alpha=0.75)
-    panel(ax, "B")
 
     ax = fig.add_subplot(gs[0, 2])
+    ax_c = ax
     pair = pd.read_csv(RESULTS / "phase1_pair_grid.csv", index_col=0).to_numpy(float)
     pair = np.maximum(pair, 1e-6)
     im = ax.imshow(pair, origin="lower", cmap="magma", norm=LogNorm(vmin=1e-6, vmax=pair.max()))
@@ -209,11 +222,14 @@ def figure2_identifiability() -> None:
     ax.set(xticks=[0, 2, 4, 6, 8, 10], yticks=[0, 2, 4, 6, 8, 10],
            xlabel="Second repetition count, k₂", ylabel="First repetition count, k₁",
            title="Any two distinct counts\nidentify both parameters")
+    ax.set_anchor("N")
     cbar = fig.colorbar(im, ax=ax, fraction=0.047, pad=0.03)
     cbar.set_label("det information")
-    panel(ax, "C")
 
     fig.subplots_adjust(left=0.08, right=0.98, bottom=0.18, top=0.79)
+    for label, axis in zip("ABC", (ax_a, ax_b, ax_c)):
+        fig.text(axis.get_position().x0, 0.965, label, fontsize=10.0,
+                 fontweight="bold", va="top", ha="left", color=INK)
     finish(fig, "figure_2_identifiability")
 
 
@@ -277,7 +293,7 @@ def figure3_learning() -> None:
 
 def figure4_interventions() -> None:
     style()
-    traj = pd.read_csv(RESULTS / "phase3_trajectories.csv")
+    traj = read_result_csv("phase3_trajectories.csv")
     summary = pd.read_csv(RESULTS / "phase3_summary.csv")
     fig = plt.figure(figsize=(7.1, 5.25))
     gs = fig.add_gridspec(2, 2, hspace=0.88, wspace=0.43)
@@ -466,14 +482,14 @@ def figure5_predictions() -> None:
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
-    box(ax, (0.02, 0.61), 0.26, 0.22, "Randomize\nschedule", BLUE_LIGHT, BLUE,
+    box(ax, (0.02, 0.59), 0.24, 0.25, "Randomize\nschedule", BLUE_LIGHT, BLUE,
         fontsize=7.5)
-    box(ax, (0.37, 0.61), 0.26, 0.22, "Estimate q, p,\nand confidence\nafter each block",
-        "#E4F2EE", TEAL, fontsize=7.2)
-    box(ax, (0.72, 0.61), 0.26, 0.22, "Final efficacy\nerror\n(primary)", RED_LIGHT, RED,
-        fontsize=7.4)
-    arrow(ax, (0.28, 0.72), (0.37, 0.72), color=INK)
-    arrow(ax, (0.63, 0.72), (0.72, 0.72), color=INK)
+    box(ax, (0.36, 0.59), 0.30, 0.25, "Estimate q, p,\nand confidence\nby block",
+        "#E4F2EE", TEAL, fontsize=6.8)
+    box(ax, (0.75, 0.59), 0.23, 0.25, "Final efficacy\nerror\n(primary)", RED_LIGHT, RED,
+        fontsize=7.0)
+    arrow(ax, (0.26, 0.715), (0.37, 0.715), color=INK)
+    arrow(ax, (0.66, 0.715), (0.75, 0.715), color=INK)
     ax.text(0.02, 0.39, "Primary contrast", fontsize=7.0, color=MUTED,
             fontweight="bold")
     ax.text(0.02, 0.29, "Fixed {3} vs informative schedules",

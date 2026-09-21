@@ -28,29 +28,25 @@ epistemic_trap/            library
   grid.py                  grid-based Bayesian posterior over (q, p)
   policies.py              belief → number of repetitions k
   simulate.py              episode generative model, agent runner
-  pomdp.py                 developmental Rigoux et al. implementation check
   plotstyle.py             shared publication style
   config.py                seeds, grid resolution, canonical parameters
 
-phase0_replication.py      developmental implementation check (not submitted)
 phase1_nonidentifiability.py  the theorem + geometry     → Fig 2
 phase2_bayesian_pomdp.py   Bayesian agent, H1–H3         → Fig 3 data
-phase3_interventions.py    8 intervention arms, H4–H5    → Fig 6 data
-phase4_hysteresis_phasediagram.py  ramp, step, phase diagrams → Figs 4, 5 data
-phase5_predictions.py      human-experiment predictions  → Fig 7 data
-phase6_responsibility_feedback.py  post-hoc behavioural-loop robustness check
-make_figures.py            assembles Figs 1, 3, 4, 5, 6, 7 and Fig S2
+phase3_interventions.py    intervention contrasts        → Fig 4 data
+phase4_hysteresis_phasediagram.py  ramp, step, phase diagrams → Figs S1–S3 data
+phase5_predictions.py      matched-exposure experiment   → Fig 5 data
+make_submission_figures.py  assembles the five main figures
+make_figures.py            assembles the three supporting figures
 make_numbers.py            emits paper/numbers.tex from the result files
-tests/                     177 tests (analytic identities, conjugate Bayes, EIG)
-                           ruff-clean (F, E9)
+tests/                     analytic identities, conjugate Bayes and EIG checks
 
-results/                   every intermediate table (CSV/NPZ); the large
-                           phase3 trajectory log is gzip-compressed
-figures/                   PDF (for LaTeX) and PNG (for viewing)
-paper/paper_draft.tex      manuscript draft
+results/                   release tables (CSV/NPZ)
+figures/                   supporting figures in PDF and PNG
+paper/figures_submission/  final main figures in PDF and PNG
+paper/paper_draft.tex      manuscript source
 paper/references.bib       bibliography (Crossref-audited; see results/)
 docs/deviations.md         where this departs from the original project brief
-The publisher-upload package is maintained separately from this public code-and-data release.
 ```
 
 ## Running everything
@@ -64,19 +60,18 @@ Or phase by phase (approximate runtimes on a laptop):
 
 ```bash
 python3 -m pytest tests/ -q                                            # ~6 s
-python3 phase0_replication.py --n-worlds 60 --n-per-group 60           # ~70 s
 python3 phase1_nonidentifiability.py                                   # ~10 s
 python3 phase2_bayesian_pomdp.py --n-agents 20 --n-episodes 2000       # ~4 min
 python3 phase2_bayesian_pomdp.py --only-kappa --n-agents 12 --n-episodes 2000
 python3 phase3_interventions.py --n-agents 25                          # ~15 min
 python3 phase4_hysteresis_phasediagram.py --n-agents 16 --sweep-n 11   # ~55 min
-python3 phase5_predictions.py --n-individuals 300                      # ~10 min
-python3 phase6_responsibility_feedback.py --n-agents 8                 # ~2 min
-python3 make_figures.py
+python3 phase5_predictions.py
+python3 make_figures.py 4 5 8
+python3 make_submission_figures.py
 python3 make_numbers.py
 ```
 
-Every script takes `--quick` for a smoke test. All randomness is seeded from
+Every simulation script takes `--quick` for a smoke test. All randomness is seeded from
 `epistemic_trap.config.MASTER_SEED`; inference is grid-based, so runs are
 deterministic within a fixed software environment.
 
@@ -85,33 +80,25 @@ deterministic within a fixed software environment.
 | # | Result | Where |
 |---|--------|-------|
 | 1 | `det I_k ≡ 0` for every fixed `k` and every interior `(q,p)`; SymPy-verified | `phase1`, Fig 2 |
-| 2 | Identifiability is set by the **support** of the policy over `k`, not by how much safety behaviour it performs; the best two-point design is `{0,1}`, not `{0, k_compulsive}` | `phase1`, Fig 2D–E |
+| 2 | Identifiability is set by the **support** of the policy over `k`, not by how much safety behaviour it performs; the best two-point design is `{0,1}`, not `{0, k_compulsive}` | `phase1`, Fig 2B–C |
 | 3 | A repetitive Bayesian agent becomes precise about `λ_k` while learning nothing (or unlearning) about `p`; after 2000 episodes it still believes its actions work half as well as they do | `phase2`, Fig 3 |
-| 4 | Information about one's own efficacy is **exactly zero at k = 0**, peaks at a small interior `k`, and vanishes again at large `k` | `phase2`, Fig 3F |
+| 4 | Information about one's own efficacy is **exactly zero at k = 0**, peaks at a small interior `k`, and vanishes again at large `k` | `phase2` fixed-design sweep |
 | 5 | Response prevention from a naive start moves the efficacy belief by exactly nothing; it works only as the second half of a contrast with earlier repetitive episodes | `phase3` |
-| 6 | A post-action state probe removes state uncertainty and almost no structural uncertainty; the same probe moved before acting is strongly diagnostic | `phase3`, Fig 6D |
-| 7 | The trap's second face: the untreated agent resolves the ambiguity the *wrong* way, concludes the world is safe (`E[q]≈0.07` vs a true `0.30`), and under-protects; every condition that probes `q` raises the follow-up repetition rate | `phase3`, Fig 6F |
+| 6 | A post-action state probe removes state uncertainty and almost no structural uncertainty; the same probe moved before acting is strongly diagnostic | `phase3`, Fig 4C |
+| 7 | The trap's second face: the untreated agent resolves the ambiguity the *wrong* way, concludes the world is safe (`E[q]≈0.07` vs a true `0.30`), and under-protects; every condition that probes `q` raises the follow-up repetition rate | `phase3`, Fig 4D |
 | 8 | Uncertainty aversion `κ > 0` raises repetition and worsens efficacy learning, but does not sustain repetition over the simulated horizon | `phase2 --only-kappa` |
-| 9 | Residual error is **U-shaped** in the realised repetition count: never acting and always acting are equally blind. The cost of harm decides which kind of blindness you get | `phase4`, Fig 4D |
-| 10 | Four randomized schedules can match mean exposure while separating raw variance from expected information; fixed `{3}`, `{2,4}`, `{1,5}`, and uniform `0..6` define the proposed human test | `phase5`, Fig 7 |
-| 11 | A post-hoc responsibility feedback from recent repetition to subjective harm cost **can** close the behavioural loop, but this works by adding a new psychological assumption rather than by changing the identifiability theorem | `phase6` |
+| 9 | Residual error is **U-shaped** in the realised repetition count: never acting and always acting are equally blind. The cost of harm decides which kind of blindness you get | `phase4`, Fig S1 |
+| 10 | Four randomized schedules can match mean exposure while separating raw variance from expected information; fixed `{3}`, `{2,4}`, `{1,5}`, and uniform `0..6` define the proposed human test | `phase5`, Fig 5 |
 
-Hypothesis verdicts are written to `results/phase2_hypotheses.csv`,
-`results/phase3_hypotheses.csv`, `results/phase5_predictions.csv`, and
-`results/phase6_hypotheses.csv` with the metric, the comparison value, and a
-boolean.
+Hypothesis verdicts are written to `results/phase2_hypotheses.csv`
+and `results/phase3_hypotheses.csv` with the metric, the comparison value, and a
+boolean. Phase 5 supplies simulated outcomes for the proposed experiment; it is
+not presented as human evidence.
 
 ## Reproducibility notes
 
 - Bayesian inference is on a 101×101 midpoint grid; `tests/test_grid.py` checks
   it against analytic Beta–Binomial posteriors and against grid refinement.
-- `results/phase3_trajectories.csv.gz` is the compressed per-episode phase-3
-  log. The figure scripts transparently accept either this file or the legacy
-  uncompressed `.csv` name.
-- The developmental POMDP implementation check uses discounted value iteration on a discretised belief
-  interval instead of `pomdp-solve`; `tests/test_pomdp.py` checks the transition,
-  observation and reward tables against the published tables and checks
-  resolution stability.
 - Knowledge is scored by `log P(q*, p* | D)`, not by entropy. Entropy alone
   rewards confident wrongness, and one of the findings is that an untreated agent
   becomes confident and wrong.
@@ -121,12 +108,13 @@ boolean.
 - [x] Crossref audit of the 25 source references completed; decisions are in
       `results/reference_audit_crossref_decisions.md`.
 - [x] Author, affiliation, funding, contribution, competing-interests and AI
-      disclosure statements prepared in the separate submission package.
+      disclosure statements prepared in the separate publisher upload package.
 - [x] PLOS submission DOCX/PDF, clean bioRxiv PDF, cover letter and TIFF figure
-      files prepared outside this code-and-data release.
+      files prepared in that upload package.
 - [x] Corresponding-author ORCID and public repository URL added to the manuscript and cover letter.
 - [ ] Request PLOS fee assistance at submission; no external funding is
       available for the APC.
 
-The LaTeX source is retained for reproducibility, but the intended submission
-format is the DOCX/PDF package in `output/submission/`.
+The LaTeX source is retained for reproducibility. Publisher upload files are
+maintained separately so this public release contains only manuscript-related
+source, code, results and figures.
