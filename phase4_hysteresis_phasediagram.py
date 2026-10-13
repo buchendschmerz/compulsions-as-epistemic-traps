@@ -97,9 +97,8 @@ def run_ramp(prior, beta, tau, gamma_forget, schedule, limbs, seed, cost=None,
         world = World(q=float(q_t), p=p_true)
         k = policy.sample(grid, rng, t=t)
         harm, obs, m_chk = world.run_episode(k, rng, check_mode=check_mode)
-        grid.update_harm(k, harm)
-        if obs is not None:
-            grid.update_check(m_chk, bool(obs), world.d_dirty, world.d_clean)
+        grid.update_episode(k, harm, check_mode, obs,
+                            world.d_dirty, world.d_clean)
         grid.flatten(gamma_forget)
         mq, mp = grid.mean()
         rows.append(dict(episode=t, q_world=float(q_t), limb=limb, k=k, harm=harm,

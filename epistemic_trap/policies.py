@@ -1,10 +1,9 @@
 r"""Policies: how a belief about ``(q, p)`` becomes a number of preventive repetitions.
 
 A policy is the object that turns a posterior into an *experimental design*.  The
-central claim of the project lives here: a policy that is optimal for immediate
-harm minimisation concentrates all of its mass on a single ``k``, and a
-single-``k`` design is exactly the design under which ``q`` and ``p`` are
-non-identifiable.
+fixed-count result concerns policies placing all mass on one ``k``. Finite-
+temperature softmax policies retain full support; their concentration can cause
+poor finite-sample learning but is not itself structural non-identifiability.
 """
 
 from __future__ import annotations
@@ -22,6 +21,7 @@ __all__ = [
     "GreedyPolicy",
     "FixedKPolicy",
     "RandomizedPolicy",
+    "ResponsibilityFeedbackPolicy",
     "ScheduledPolicy",
     "QuotaPolicy",
 ]
@@ -187,3 +187,51 @@ class QuotaPolicy(Policy):
         probe = np.zeros(len(self.k_values))
         probe[int(np.where(self.k_values == self.k_probe)[0][0])] = 1.0
         return (1.0 - self.epsilon) * w + self.epsilon * probe
+
+
+@dataclass
+class ResponsibilityFeedbackPolicy(GreedyPolicy):
+    r"""Greedy safety behaviour with a responsibility feedback term.
+
+    ``responsibility`` is an exponentially weighted trace of the agent's recent
+    repetition count, scaled to ``[0, 1]``.  The subjective harm cost is inflated
+    by ``1 + strength * responsibility`` before the usual greedy choice is made.
+    This is a deliberately minimal post-hoc mechanism for asking whether the
+    epistemic trap becomes behaviourally persistent once "I have been acting a
+    lot, therefore harm would be more my responsibility" feeds back into choice.
+    """
+
+    strength: float = 0.0
+    decay: float = 0.98
+    _responsibility: float = field(default=0.0, init=False, repr=False)
+
+    @property
+    def responsibility(self):
+        return self._responsibility
+
+    def effective_cost(self):
+        base = COST if self.cost is None else self.cost
+        cost = dict(base)
+        cost["harm"] = base["harm"] * (1.0 + self.strength * self._responsibility)
+        return cost
+
+    def k_distribution(self, grid, t=0):
+        u = action_utilities(grid, self.k_values, cost=self.effective_cost(),
+                             kappa=self.kappa, tau=self.tau,
+                             info_target=self.info_target)
+        z = self.beta * (u - u.max())
+        w = np.exp(z)
+        return w / w.sum()
+
+    def sample(self, grid, rng, t=0):
+        k = super().sample(grid, rng, t=t)
+        max_k = max(float(np.max(self.k_values)), 1.0)
+        self._responsibility = (
+            self.decay * self._responsibility
+            + (1.0 - self.decay) * (k / max_k)
+        )
+        return k
+
+    def reset(self):
+        self._responsibility = 0.0
+        return self

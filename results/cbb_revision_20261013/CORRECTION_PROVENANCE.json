@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-13",
+  "correction": "joint probe and terminal-outcome likelihood",
+  "rerun_agents": 82,
+  "master_seed": 20240620,
+  "phase3_conditions": [
+    "reassurance",
+    "baseline_check"
+  ],
+  "phase3_agents_per_condition": 25,
+  "phase4_arm": "checker",
+  "phase4_agents_per_condition": 16,
+  "unaffected_results": "Copied without recomputation from the frozen prior dataset",
+  "source": "tools/recompute_probe_results.py"
+}

@@ -1,0 +1,10 @@
+[phase2] uncertainty aversion (severe-doubt prior):
+ kappa  mean_k  mean_p  err_p  sd_p  corr_qp  harm  logdens_true  k_early  k_late  persistence
+   0.0   1.963   0.498 -0.302 0.142    0.839 0.016        -2.095    4.250   2.000        0.471
+   0.5   2.051   0.439 -0.361 0.153    0.837 0.015        -2.451    5.350   1.990        0.372
+   1.0   2.225   0.397 -0.403 0.157    0.827 0.012        -2.706    6.100   1.961        0.322
+   2.0   2.744   0.373 -0.427 0.144    0.815 0.009        -4.445    7.733   2.012        0.260
+   4.0   4.103   0.384 -0.416 0.159    0.742 0.002        -4.244    9.850   2.581        0.262
+
+[phase2] corr(kappa, mean k) = 0.988;  corr(kappa, |error in E[p]|) = 0.734
+[phase2] done in 532.6s

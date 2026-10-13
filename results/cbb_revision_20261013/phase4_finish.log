@@ -1,0 +1,37 @@
+=== main phase4 finished; rerunning A2 with forgetting ===
+[phase4A2]    locked  (84s)
+[phase4A2]     quota  (171s)
+[phase4A2]   curious  (384s)
+[phase4A2]   checker  (496s)
+
+[phase4A2] hazard removed at mid-run (horizon 1500 episodes):
+         k_hazard  k_final  episodes_to_halve  censored  belief_q_final  belief_p_final
+arm                                                                                    
+checker     6.381    1.513            847.375     0.000           0.027           0.657
+curious     5.927    0.036            218.750     0.000           0.005           0.335
+locked      6.177    2.792           1153.250     0.062           0.323           0.799
+quota       4.734    1.243            794.250     0.000           0.026           0.701
+
+[phase4B] trap severity by initial doubt (averaged over harm cost):
+              mean_k  abs_err_p    z_p
+mean_p_prior                          
+0.05           1.967      0.503  7.622
+0.14           2.395      0.304  3.235
+0.23           2.301      0.259  2.452
+0.32           2.324      0.178  1.919
+0.41           2.278      0.128  1.479
+0.50           2.177      0.092  1.126
+0.59           2.084      0.059  0.764
+0.68           2.034      0.031  0.443
+0.77           1.975      0.023  0.436
+0.86           1.907      0.029  0.688
+0.95           1.897      0.046  1.159
+
+[phase4] done in 496.7s
+=== figures ===
+[fig4] Where the trap lives: doubt x harm cost, and the axis that escapes it.
+  -> /Users/dai2002/Library/Mobile Documents/com~apple~CloudDocs/Self_Research/OCD_modeling/figures/fig4_phase_diagram.pdf
+[fig5] Path dependence: what happens when the danger goes away.
+  -> /Users/dai2002/Library/Mobile Documents/com~apple~CloudDocs/Self_Research/OCD_modeling/figures/fig5_hysteresis.pdf
+wrote 195 macros to /Users/dai2002/Library/Mobile Documents/com~apple~CloudDocs/Self_Research/OCD_modeling/paper/numbers.tex
+=== ALL DONE ===

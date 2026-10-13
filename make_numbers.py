@@ -10,10 +10,13 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import os
+from pathlib import Path
 
 from epistemic_trap.config import RESULTS, ROOT, WORLD
 
-OUT = ROOT / "paper" / "numbers.tex"
+OUT = Path(os.environ.get("OCD_NUMBERS_OUTPUT", ROOT / "paper" / "numbers.tex"))
+OUT.parent.mkdir(parents=True, exist_ok=True)
 MACROS = {}
 
 

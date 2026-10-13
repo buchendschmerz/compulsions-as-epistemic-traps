@@ -6,6 +6,7 @@ import pytest
 from epistemic_trap.config import PRIORS
 from epistemic_trap.grid import ParameterGrid
 from epistemic_trap.policies import (FixedKPolicy, GreedyPolicy, RandomizedPolicy,
+                                     ResponsibilityFeedbackPolicy,
                                      ScheduledPolicy, action_utilities,
                                      expected_cost)
 from epistemic_trap.simulate import (AgentSpec, World, policy_empirical_distribution,
@@ -101,6 +102,22 @@ def test_fixed_policy_is_degenerate_and_scheduled_policy_follows_its_schedule():
     assert all(FixedKPolicy(k_values=ks, k=4).sample(g, rng, t=t) == 4 for t in range(20))
     sched = ScheduledPolicy(k_values=ks, schedule=lambda t: t % 4)
     assert [sched.sample(g, rng, t=t) for t in range(6)] == [0, 1, 2, 3, 0, 1]
+
+
+def test_responsibility_feedback_policy_keeps_state_and_can_reset():
+    g = ParameterGrid.from_beta_prior(**PRIORS["severe_doubt"])
+    ks = np.arange(11)
+    rng = np.random.default_rng(0)
+    pol = ResponsibilityFeedbackPolicy(k_values=ks, beta=60.0, strength=8.0,
+                                       decay=0.5)
+    d = pol.k_distribution(g)
+    assert d.shape == ks.shape
+    assert np.all(d >= 0) and d.sum() == pytest.approx(1.0)
+    assert pol.responsibility == pytest.approx(0.0)
+    pol.sample(g, rng)
+    assert pol.responsibility > 0.0
+    pol.reset()
+    assert pol.responsibility == pytest.approx(0.0)
 
 
 def test_empirical_policy_distribution():

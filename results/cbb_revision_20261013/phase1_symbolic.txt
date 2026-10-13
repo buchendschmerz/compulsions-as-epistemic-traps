@@ -1,0 +1,31 @@
+Symbolic derivation (SymPy) -- policy-induced non-identifiability
+======================================================================
+lambda_k                    =          k
+q*(1 - p) 
+grad lambda_k               = [                      k ]
+[       k  -k*q*(1 - p)  ]
+[(1 - p)   --------------]
+[              1 - p     ]
+
+(i) Fisher information of one Bernoulli harm observation at fixed k:
+    rank(I_k)               = 1
+    det(I_k)                = 0          <-- identically zero
+    null direction of I_k   = [-k*q    ]
+[-----  1]
+[p - 1   ]
+
+(ii) Iso-likelihood ridge q = lambda_0 (1-p)^(-k):
+    dq/dp along the ridge   = -k*q/(p - 1)
+    -> non-negative for all k >= 0, so the residual (q,p) dependence is
+       POSITIVE and increases with k  [hypothesis H3].
+
+(iii) A two-point policy pi = {k_1, k_2} with equal mass:
+    det(I_pi)               = (1 - p)**(k_1 + k_2)*(k_1**2/4 - k_1*k_2/2 + k_2**2/4)/(p**2*q**2*(1 - p)**(k_1 + k_2) - p**2*q*(1 - p)**k_1 - p**2*q*(1 - p)**k_2 + p**2 - 2*p*q**2*(1 - p)**(k_1 + k_2) + 2*p*q*(1 - p)**k_1 + 2*p*q*(1 - p)**k_2 - 2*p + q**2*(1 - p)**(k_1 + k_2) - q*(1 - p)**k_1 - q*(1 - p)**k_2 + 1)
+    det(I_pi) at k_1 = k_2  = 0          <-- degenerate only if k_1 = k_2
+
+(iv) Constructive identification from two conditions:
+    p_hat = 1 - (lambda_1/lambda_2)^(1/(k_1-k_2))
+    substituting the true lambdas gives p_hat = 1 - ((1 - p)**(k_1 - k_2))**(1/(k_1 - k_2))
+
+Conclusion: non-identifiability under a repetitive safety policy is a
+theorem about the design, not a numerical artefact of the simulation.

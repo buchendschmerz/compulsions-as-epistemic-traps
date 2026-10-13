@@ -1,48 +1,47 @@
 #!/usr/bin/env python3
 r"""Phase 3 -- interventions: what actually restores identifiability?
 
-Every agent is identical up to the intervention: the same severe-doubt prior, the
-same environment, the same exact-Bayesian learner, and the same *pre-treatment*
-block of free choice, during which it settles into a repetitive safety policy.
-Only the treatment block differs.
+The main arms share a prior, environment and baseline protocol, but use separate
+random seeds. Bayesian updating is performed on a discrete parameter grid.
+The no-preventive-baseline reference uses a different initial protocol.
 
 Conditions
 ----------
 ``free_choice``     continue choosing ``k`` to minimise expected harm (control).
 ``locked_k``        the pre-treatment ``k`` is held fixed throughout: the pure
-                    no-diversification control, and the only condition that keeps
-                    the realised design singular.
+                    no-diversification intervention control; the complete
+                    baseline/intervention history need not be singular.
 ``reassurance``     free choice, plus a check *after* the preventive actions --
                     the formal analogue of reassurance seeking: it resolves "am I
                     safe now?" and re-probes the same composite ``lambda_k`` the
-                    harm outcome already reports.
+                    harm outcome already reports. Conditional on the noiseless
+                    terminal outcome, it adds no parameter evidence.
 ``baseline_check``  free choice, plus a check *before* the preventive actions --
                     same behavioural cost, but a genuine probe of the baseline
-                    hazard ``q``.  A novel, clinically actionable contrast.
+                    hazard ``q``. The clinical relevance remains untested.
 ``erp_k0``          pure response prevention: ``k = 0`` throughout treatment.
 ``graded_erp``      the number of repetitions is stepped down through
                     ``k_pre, ..., 1, 0`` and then cycled, so the treatment block
                     contains several distinct experimental conditions.
 ``variable_k``      ``k`` drawn uniformly from ``{0, 1, 2, 3}`` -- maximal design
                     diversity at a comparable mean action rate.
-``erp_naive``       response prevention with **no** pre-treatment block, which
-                    isolates the fact that ``k = 0`` on its own carries exactly
-                    zero information about one's own efficacy.
+``erp_naive``       k = 0 during both baseline and intervention, followed by
+                    free choice. Under the independent prior, the efficacy
+                    marginal is unchanged during the zero-count blocks.
 
 A finding worth stating up front: response prevention applied *after* a period of
 repetitive behaviour does inform the agent about ``p``, but only *indirectly*.
 The compulsive block pins down the composite ``lambda_{k_pre}``; the
 response-prevention block pins down ``q``; together they are a two-point design
 and ``p`` follows.  ERP is therefore not a probe of efficacy, it is the second
-half of a contrast -- and it is worthless as a first half, which ``erp_naive``
-demonstrates.
+half of a contrast. On its own, k = 0 identifies hazard rather than efficacy.
 
 Each run has three blocks: pre-treatment free choice, treatment, and a
 free-choice follow-up that tests whether the gains persist.
 
 Outputs
 -------
-results/phase3_trajectories.csv.gz per-episode logs for every condition (gzip)
+results/phase3_trajectories.csv   per-episode logs for every condition
 results/phase3_summary.csv        end-of-block summaries
 results/phase3_blocks.csv         block means per condition
 results/phase3_hypotheses.csv     numeric verdicts on H4 and H5
@@ -50,9 +49,10 @@ results/phase3_hypotheses.csv     numeric verdicts on H4 and H5
 
 from __future__ import annotations
 
-import argparse
 import gzip
 import io
+
+import argparse
 import time
 
 import numpy as np
@@ -72,14 +72,6 @@ CONDITIONS = ["free_choice", "locked_k", "reassurance", "baseline_check",
               "erp_k0", "graded_erp", "variable_k", "erp_naive"]
 
 NO_PRETREATMENT = {"erp_naive"}  # conditions that start from the naive prior
-
-
-def write_compressed_csv(frame: pd.DataFrame, path) -> None:
-    """Write a deterministic gzip CSV so the raw trajectory file stays small."""
-    with path.open("wb") as raw:
-        with gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0) as compressed:
-            with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as stream:
-                frame.to_csv(stream, index=False)
 
 
 def greedy():
@@ -160,6 +152,8 @@ def main():
     ap.add_argument("--n-tx", type=int, default=600)
     ap.add_argument("--n-post", type=int, default=400)
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--reanalyse", action="store_true",
+                    help="recompute block summaries and contrasts from saved tables")
     args = ap.parse_args()
     if args.quick:
         args.n_agents, args.n_pre, args.n_tx, args.n_post = 3, 60, 90, 60
@@ -170,7 +164,7 @@ def main():
     t0 = time.time()
 
     frames, summaries = [], []
-    for ci, cond in enumerate(CONDITIONS):
+    for ci, cond in ([] if args.reanalyse else enumerate(CONDITIONS)):
         for a in range(args.n_agents):
             df = run_protocol(world, cond, MASTER_SEED + 7000 * ci + a,
                               args.n_pre, args.n_tx, args.n_post)
@@ -207,10 +201,19 @@ def main():
                     k_support=int(last.k_support)))
         print(f"[phase3] {cond:>15}  ({time.time() - t0:.0f}s)")
 
-    traj = pd.concat(frames, ignore_index=True)
-    write_compressed_csv(traj, RESULTS / "phase3_trajectories.csv.gz")
-    summ = pd.DataFrame(summaries)
-    summ.to_csv(RESULTS / "phase3_summary.csv", index=False)
+    if args.reanalyse:
+        path = RESULTS / "phase3_trajectories.csv"
+        compressed = path.with_suffix(".csv.gz")
+        traj = pd.read_csv(compressed if compressed.exists() else path)
+        summ = pd.read_csv(RESULTS / "phase3_summary.csv")
+    else:
+        traj = pd.concat(frames, ignore_index=True)
+        with (RESULTS / "phase3_trajectories.csv.gz").open("wb") as raw:
+            with gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as compressed:
+                with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as stream:
+                    traj.to_csv(stream, index=False)
+        summ = pd.DataFrame(summaries)
+        summ.to_csv(RESULTS / "phase3_summary.csv", index=False)
 
     blocks = (summ.groupby(["condition", "block"]).mean(numeric_only=True)
               .reset_index().drop(columns=["agent"]))

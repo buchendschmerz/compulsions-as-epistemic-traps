@@ -1,7 +1,8 @@
 numpy
 scipy
-matplotlib
-pandas
 sympy
+pandas
+matplotlib
 pytest
-pypdf
+python-docx
+Pillow

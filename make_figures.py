@@ -6,8 +6,8 @@ Usage
     python3 make_figures.py            # all figures that have data available
     python3 make_figures.py 1 3 6      # only these
 
-The concise main-text figures, including Figure 2, are produced by
-``make_submission_figures.py``.
+Figure 2 is produced by ``phase1_nonidentifiability.py``. The concise main-text
+figures are produced by ``make_submission_figures.py``.
 """
 
 from __future__ import annotations
@@ -24,22 +24,9 @@ from epistemic_trap.plotstyle import (C, CONDITION_COLORS, CONDITION_LABELS,
 Q_TRUE, P_TRUE = WORLD["q"], WORLD["p"]
 
 
-def _result_path(name):
-    """Resolve CSV results stored either plainly or as deterministic gzip."""
-    path = RESULTS / name
-    if not path.exists() and path.suffix == ".csv":
-        compressed = path.with_suffix(".csv.gz")
-        if compressed.exists():
-            return compressed
-    return path
-
-
-def _read_csv(name, **kwargs):
-    return pd.read_csv(_result_path(name), **kwargs)
-
-
 def _need(*names):
-    missing = [n for n in names if not _result_path(n).exists()]
+    missing = [n for n in names if not (RESULTS / n).exists()
+               and not (RESULTS / (n + ".gz")).exists()]
     if missing:
         print(f"  [skip] missing {missing}")
     return not missing
@@ -465,7 +452,9 @@ def fig6_interventions():
     from matplotlib.lines import Line2D
 
     use_style()
-    traj = _read_csv("phase3_trajectories.csv")
+    path = RESULTS / "phase3_trajectories.csv"
+    compressed = path.with_suffix(".csv.gz")
+    traj = pd.read_csv(compressed if compressed.exists() else path)
     summ = pd.read_csv(RESULTS / "phase3_summary.csv")
 
     cols = dict(CONDITION_COLORS)

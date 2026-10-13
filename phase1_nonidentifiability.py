@@ -36,6 +36,7 @@ results/phase1_symbolic.txt          machine-checked symbolic derivation
 results/phase1_ridge.csv             iso-likelihood ridge coordinates
 results/phase1_policy_identifiability.csv   det/cond of I_pi for candidate policies
 results/phase1_pair_grid.csv         det of I_pi for every two-point policy (k1,k2)
+figures/fig2_nonidentifiability.pdf  Figure 2
 """
 
 from __future__ import annotations
@@ -348,8 +349,8 @@ def main():
           f"p={p_hat:.6f} (true {P_TRUE})")
     assert abs(q_hat - Q_TRUE) < 1e-9 and abs(p_hat - P_TRUE) < 1e-9
 
-    print("[phase1] tables complete; manuscript Figure 2 is assembled by "
-          "make_submission_figures.py")
+    path = make_figure(ridges, poltab, ks_pair, pairmat)
+    print(f"[phase1] figure -> {path}")
 
 
 if __name__ == "__main__":

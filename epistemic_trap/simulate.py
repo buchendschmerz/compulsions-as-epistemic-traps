@@ -157,11 +157,8 @@ def run_agent(world, spec, n_episodes, seed, log_every=1, k_ref_mode="modal",
         b_commit = commit_state_prob(grid, k, spec.check_mode, check_obs,
                                      world.d_dirty, world.d_clean)
 
-        # -- Bayesian update: harm outcome first, then the check (order irrelevant)
-        grid.update_harm(k, harm)
-        if check_obs is not None:
-            grid.update_check(m_check, bool(check_obs),
-                              world.d_dirty, world.d_clean)
+        grid.update_episode(k, harm, spec.check_mode, check_obs,
+                            world.d_dirty, world.d_clean)
         grid.flatten(spec.gamma_forget)
 
         if (t + 1) % log_every == 0 or t == n_episodes - 1:
@@ -171,6 +168,8 @@ def run_agent(world, spec, n_episodes, seed, log_every=1, k_ref_mode="modal",
                        H_state_pre=float(binary_entropy(b_pre)),
                        H_state_commit=float(binary_entropy(b_commit)),
                        p_hazard_commit=float(b_commit))
+            if hasattr(spec.policy, "responsibility"):
+                row["responsibility"] = float(spec.policy.responsibility)
             row.update(grid.summary(k_ref=k_ref, truth=(world.q, world.p)))
             row["err_p"] = row["mean_p"] - world.p
             row["err_q"] = row["mean_q"] - world.q

@@ -8,6 +8,7 @@ standardise the visual language, and are sized for a single-column manuscript.
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,8 +19,8 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 
 ROOT = Path(__file__).resolve().parent
-RESULTS = ROOT / "results"
-OUT = ROOT / "paper" / "figures_submission"
+RESULTS = Path(os.environ.get("OCD_RESULTS_DIR", ROOT / "results"))
+OUT = Path(os.environ.get("OCD_MAIN_FIGURES_DIR", ROOT / "paper" / "figures_submission"))
 OUT.mkdir(parents=True, exist_ok=True)
 
 INK = "#18242F"
@@ -35,14 +36,10 @@ PURPLE = "#6C5B9D"
 BG = "#FFFFFF"
 
 
-def read_result_csv(name: str, **kwargs) -> pd.DataFrame:
-    """Read a result table, accepting the release's deterministic gzip form."""
+def read_result_csv(name, **kwargs):
     path = RESULTS / name
-    if not path.exists() and path.suffix == ".csv":
-        compressed = path.with_suffix(".csv.gz")
-        if compressed.exists():
-            path = compressed
-    return pd.read_csv(path, **kwargs)
+    compressed = path.with_suffix(path.suffix + ".gz")
+    return pd.read_csv(compressed if compressed.exists() else path, **kwargs)
 
 
 def style() -> None:

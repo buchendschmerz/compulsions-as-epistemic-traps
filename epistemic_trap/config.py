@@ -3,24 +3,14 @@
 from __future__ import annotations
 
 import pathlib
+import os
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-RESULTS = ROOT / "results"
-FIGURES = ROOT / "figures"
+RESULTS = pathlib.Path(os.environ.get("OCD_RESULTS_DIR", ROOT / "results"))
+FIGURES = pathlib.Path(os.environ.get("OCD_FIGURES_DIR", ROOT / "figures"))
 
-RESULTS.mkdir(exist_ok=True)
-FIGURES.mkdir(exist_ok=True)
-
-
-def result_path(name: str) -> pathlib.Path:
-    """Return a result path, preferring the plain file for compatibility.
-
-    Large per-episode tables are distributed as ``.csv.gz`` in the public
-    release, while older local runs may still contain the uncompressed CSV.
-    """
-    plain = RESULTS / name
-    compressed = RESULTS / f"{name}.gz"
-    return plain if plain.exists() else compressed
+RESULTS.mkdir(parents=True, exist_ok=True)
+FIGURES.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------- reproducibility
 MASTER_SEED = 20240620  # publication date of Rigoux et al. (2024)

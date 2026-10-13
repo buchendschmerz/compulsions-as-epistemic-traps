@@ -116,6 +116,26 @@ class ParameterGrid:
         ll = np.log(p_report_dirty) if obs_dirty else np.log1p(-p_report_dirty)
         return self._add_loglik(ll)
 
+    def update_episode(self, k, harm, check_mode=None, check_obs=None,
+                       d_dirty=0.8, d_clean=0.8):
+        """Condition jointly on a probe and the perfectly observed terminal state."""
+        if check_mode is None or check_obs is None:
+            return self.update_harm(k, harm)
+        if check_mode == "reassurance":
+            # Given the terminal state, a post-action probe is ancillary to (q, p).
+            return self.update_harm(k, harm)
+        if check_mode != "baseline":
+            raise ValueError(f"unknown check_mode {check_mode!r}")
+        dirty_report = d_dirty if check_obs else 1.0 - d_dirty
+        clean_report = 1.0 - d_clean if check_obs else d_clean
+        survive = (1.0 - self.P) ** k
+        if harm:
+            likelihood = self.Q * survive * dirty_report
+        else:
+            likelihood = ((1.0 - self.Q) * clean_report
+                          + self.Q * (1.0 - survive) * dirty_report)
+        return self._add_loglik(np.log(np.clip(likelihood, EPS, None)))
+
     def flatten(self, gamma):
         r"""Power-discount the posterior, :math:`p \propto p^{\gamma}`.
 
@@ -180,8 +200,8 @@ class ParameterGrid:
         .. warning::
            For very small :math:`\lambda_k` (a compulsive agent at large ``k``)
            the whole posterior falls inside the first bin and this saturates at
-           :math:`-\log(n_{\mathrm{bins}})`.  The entropy *reduction* computed
-           from it is then a **lower bound** on the information actually gained.
+           :math:`-\log(n_{\mathrm{bins}})`. Entropy changes in this regime
+           depend on histogram resolution and are not guaranteed bounds.
            Use :meth:`sd_lambda` for a scale-free comparison in that regime.
         """
         vals = self.lam_grid(k).ravel()
